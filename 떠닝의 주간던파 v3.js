@@ -1,8 +1,3 @@
-// 2025.08.25 떠닝의 중천 모아보기
-// 던파 홈페이지 - 마이페이지 - 주간던파 에서
-// F12 눌러 콘솔에다가 붙여넣기!
-// https://df.nexon.com/mypage/character/weekly
-
 (async function () {
   const START_DATE = new Date('2025-01-09T06:00:00');
   const END_DATE = (() => { const t = new Date(); const r = new Date(t); const d = r.getDay(); const diff = (4 - d + 7) % 7; r.setDate(r.getDate() + diff); r.setHours(6, 0, 0, 0); return r; })();
@@ -357,3 +352,4 @@
   };
   document.head.appendChild(script);
 })();
+
