@@ -1,0 +1,359 @@
+// 2025.08.25 떠닝의 중천 모아보기
+// 던파 홈페이지 - 마이페이지 - 주간던파 에서
+// F12 눌러 콘솔에다가 붙여넣기!
+// https://df.nexon.com/mypage/character/weekly
+
+(async function () {
+  const START_DATE = new Date('2025-01-09T06:00:00');
+  const END_DATE = (() => { const t = new Date(); const r = new Date(t); const d = r.getDay(); const diff = (4 - d + 7) % 7; r.setDate(r.getDate() + diff); r.setHours(6, 0, 0, 0); return r; })();
+  const NOW = new Date();
+  const fmtYMD = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+  async function clickAllMoreButtons() {
+    const maxClicks = 100;
+    const deadline = Date.now() + 30000;
+    let clicks = 0;
+    const findBtn = () => document.querySelector('a.btn.btntype_bu60');
+    while (Date.now() < deadline && clicks < maxClicks) {
+      const btn = findBtn();
+      if (!btn || btn.style.display === 'none' || btn.disabled) break;
+      btn.click();
+      clicks++;
+      await delay(300);
+    }
+  }
+  await clickAllMoreButtons();
+
+  const summary = { '레벨 상승치': 0, '피로도 사용량': 0, '115Lv 태초': 0, '115Lv 에픽': 0, '115Lv 레전더리': 0, '심연 : 종말의 숭배자': 0, '종말의 숭배자': 0, '나벨': 0, '베누스': 0, '이내 황혼전': 0 };
+  const weeks = [];
+  const normalize = s => (s||'').replace(/\s*아이템$/,'').replace(/\s*클리어$/,'').replace(/\s+/g,' ').trim();
+  document.querySelectorAll('#weeklyArea dl').forEach(dl => {
+    const span = dl.querySelector('dt span')?.textContent || '';
+    const m = span.match(/(\d{4}\.\d{2}\.\d{2})\s+06시\s*~\s*(\d{4}\.\d{2}\.\d{2})\s+06시/);
+    if (!m) return;
+    const [_, sStr, eStr] = m;
+    const start = new Date(sStr.replace(/\./g,'-')+'T06:00:00');
+    const end   = new Date(eStr.replace(/\./g,'-')+'T06:00:00');
+    if (!(start >= START_DATE && end <= END_DATE)) return;
+    let weekTaecho = 0;
+    dl.querySelectorAll('dd p').forEach(p=>{
+      let label = normalize(p.querySelector('span')?.innerText);
+      const number = parseInt((p.querySelector('b')?.innerText||'').replace(/[^\d]/g,''),10)||0;
+      if (label==='115Lv 태초') { summary['115Lv 태초']+=number; weekTaecho+=number; return; }
+      if (label==='115Lv 에픽')  { summary['115Lv 에픽']+=number; return; }
+      if (label==='115Lv 레전더리'){ summary['115Lv 레전더리']+=number; return; }
+      if (label==='심연 : 종말의 숭배자'){ summary['심연 : 종말의 숭배자']+=number; return; }
+      if (label==='종말의 숭배자'){ summary['종말의 숭배자']+=number; return; }
+      if (label==='나벨'){ summary['나벨']+=number; return; }
+      if (label==='베누스'){ summary['베누스']+=number; return; }
+      if (label==='레벨 상승치'){ summary['레벨 상승치']+=number; return; }
+      if (label==='피로도 사용량'){ summary['피로도 사용량']+=number; return; }
+      if (label==='이내황혼전' || label==='이내 황혼전'){ summary['이내 황혼전']+=number; return; }
+    });
+    weeks.push({ start, end, taecho: weekTaecho });
+  });
+
+  const epic = summary['115Lv 에픽'];
+  const taecho= summary['115Lv 태초'];
+  const simyeon=summary['심연 : 종말의 숭배자'];
+  const tenEpicRate = epic ? (taecho/epic*10).toFixed(2) : '-';
+  const oneSimyeonRate = simyeon ? (taecho/simyeon).toFixed(2) : '-';
+  const dPlus = Math.floor((NOW - START_DATE) / 86400000) + 1;
+  const weekIndex = Math.floor((NOW - START_DATE) / (86400000*7)) + 1;
+
+  let moheomdan = '';
+  const grpHTML = document.querySelector('p.chargroup')?.innerHTML || '';
+  const gm = grpHTML.replace(/\s/g,'').match(/모험단<\/i>Lv\.\d+([^<]+)/);
+  moheomdan = (gm && gm[1]) ? gm[1] : (document.querySelector('#personalArea ul.name li')?.textContent.trim() || '모험단');
+  const nowStr = NOW.toLocaleString('ko-KR');
+
+  document.querySelector('#df-summary-box')?.remove();
+
+  const style = document.createElement('style');
+  style.textContent = `
+  @font-face{font-family:'DNFBitBitv2';font-style:normal;font-weight:400;src:url('https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf') format('opentype')}
+  `;
+  document.head.appendChild(style);
+  await Promise.all([document.fonts.load("34px 'DNFBitBitv2'"), document.fonts.ready]);
+
+  const container = document.createElement('div');
+  container.id='df-summary-box';
+  container.style.cssText=`
+    padding:16px;background:radial-gradient(1200px 600px at 20% -10%,rgba(77,98,255,.08),transparent),#0e111d;color:#eaf0ff;border:1px solid #24283e;border-radius:16px;
+    margin:18px auto;max-width:1160px;box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+    font-family:'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  `;
+
+  const topBrand = document.createElement('div');
+  topBrand.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;';
+  const brandLeft = document.createElement('div');
+  brandLeft.style.cssText='display:flex;align-items:center;gap:10px;';
+  const guild = document.createElement('div');
+  guild.textContent = moheomdan;
+  guild.style.cssText="font-family:'DNFBitBitv2',sans-serif;font-size:34px;letter-spacing:.3px;color:#ffffff;text-shadow:0 1px 0 #1a1d33, 0 0 16px rgba(120,140,255,.14);line-height:1;";
+  brandLeft.appendChild(guild);
+  const brandRight = document.createElement('div');
+  brandRight.style.cssText='display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;';
+  function chip(t){ const d=document.createElement('div'); d.textContent=t; d.style.cssText='padding:6px 10px;border-radius:999px;background:linear-gradient(180deg,#161a2e,#12162a);border:1px solid #2a2f50;color:#cfe1ff;font-weight:700;font-size:11px;'; return d; }
+  brandRight.appendChild(chip(`W${weekIndex}`));
+  brandRight.appendChild(chip(`D+${dPlus}`));
+  brandRight.appendChild(chip(`에픽 10 : ${tenEpicRate}`));
+  brandRight.appendChild(chip(`심숭 1 : ${oneSimyeonRate}`));
+  brandRight.appendChild(chip("떠닝의 중천 모아보기 v3"));
+  topBrand.appendChild(brandLeft); topBrand.appendChild(brandRight);
+
+  const mainGrid = document.createElement('div');
+  mainGrid.style.cssText='display:grid;grid-template-columns:1fr .8fr;gap:14px;align-items:start;';
+
+  const leftCol = document.createElement('div');
+  const rightCol = document.createElement('div');
+
+  const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
+  const ICONS = {
+    "레벨 상승치": "week_ico01.png",
+    "피로도 사용량": "week_ico02.png",
+    "115Lv 태초": "week_ico19.png",
+    "115Lv 에픽": "week_ico04.png",
+    "115Lv 레전더리": "week_ico21.png",
+    "심연 : 종말의 숭배자": "week_ico18.png",
+    "종말의 숭배자": "week_ico18.png",
+    "나벨": "week_ico22.png",
+    "베누스": "week_ico20.png",
+    "이내 황혼전": "week_ico23.png"
+  };
+  const CUSTOM_ICONS = {
+  '레벨 상승치': 'https://media.discordapp.net/attachments/1389455130859933776/1409450395054506034/week_ico01.png?ex=68ad6c78&is=68ac1af8&hm=c5669e8ecddfbf62b2e91e4c4ef8e6e52f0763b4e44eb11120009e14509fbac6&=&format=webp&quality=lossless',
+  '피로도 사용량': 'https://media.discordapp.net/attachments/1389455130859933776/1409450395432128512/week_ico02.png?ex=68ad6c78&is=68ac1af8&hm=6239b903be24e37391a5e1f8de1990ce4c94f68ee4c133abe40c8eb1f922a424&=&format=webp&quality=lossless',
+  '115Lv 에픽': 'https://media.discordapp.net/attachments/1389455130859933776/1409450395767541851/week_ico04.png?ex=68ad6c78&is=68ac1af8&hm=3555dc47362e3df1b9004f007445c00b592a2841d05eb811ec10984e3b817c20&=&format=webp&quality=lossless',
+  '이내 황혼전': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410959437824/week_ico23.png?ex=68ad6c7c&is=68ac1afc&hm=6ab78cea9c7e5622b3ee258928d0af9abf2eb0f0f9f9210e8a9e57b3a1addd22&=&format=webp&quality=lossless',
+  '나벨': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410695200820/week_ico22.png?ex=68ad6c7c&is=68ac1afc&hm=f5c940e7c7ecbccd3b6d35832abbf08a331ad01d0b8399d1451c937d3cfa25f6&=&format=webp&quality=lossless',
+  '115Lv 레전더리': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410489417739/week_ico21.png?ex=68ad6c7c&is=68ac1afc&hm=ebdfc13c1ba6116d250215cd79f4d4908e73c26c03196188d33e45b2998ea7be&=&format=webp&quality=lossless',
+  '베누스': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410258857994/week_ico20.png?ex=68ad6c7c&is=68ac1afc&hm=0f54e9c0d18adc4849b7e92c3dfb605816b179a8f8d103cde8da0a0948738fd2&=&format=webp&quality=lossless',
+  '115Lv 태초': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410032500746/week_ico19.png?ex=68ad6c7c&is=68ac1afc&hm=cba2ab67776a50ea538192a652405a1009a5fa02e47f6138ada6084e56dc3d7e&=&format=webp&quality=lossless',
+  '심연 : 종말의 숭배자': 'https://media.discordapp.net/attachments/1389455130859933776/1409450409785032736/week_ico18.png?ex=68ad6c7c&is=68ac1afc&hm=32640542fadf9e15bfbfc243a7fe6a403382f0f13eb29c4c5dc214fe56bd716c&=&format=webp&quality=lossless',
+  '종말의 숭배자': 'https://media.discordapp.net/attachments/1389455130859933776/1409450396354740254/week_ico18_1.png?ex=68ad6c78&is=68ac1af8&hm=dd2acf97d62bd76816fd39ca2ee3c6cc9453adf5c0ebc54103dd124a6b82cb9d&=&format=webp&quality=lossless'
+  };
+  const resolveIcon = k => (CUSTOM_ICONS[k] && CUSTOM_ICONS[k].trim()) || (ICON_BASE + (ICONS[k] || 'week_ico04.png'));
+
+  function stripeGrad(k){
+    if (k==='레벨 상승치' || k==='피로도 사용량') return 'linear-gradient(180deg,#9bd1ff,#5fa8ff)';
+    if (k==='115Lv 태초') return 'linear-gradient(180deg,#8be6c0,#6fb6ff)';
+    if (k==='115Lv 에픽') return 'linear-gradient(180deg,#fff2a6,#ffd84d)';
+    if (k==='115Lv 레전더리') return 'linear-gradient(180deg,#ffc28b,#ff8e3c)';
+    if (k==='심연 : 종말의 숭배자') return 'linear-gradient(180deg,#b68cff,#3a59ff)';
+    if (k==='종말의 숭배자') return 'linear-gradient(180deg,#b68cff,#8a5cff)';
+    if (k==='나벨') return 'linear-gradient(180deg,#6fb6ff,#a58bff)';
+    if (k==='베누스') return 'linear-gradient(180deg,#a58bff,#7c66d6)';
+    if (k==='이내 황혼전') return 'linear-gradient(180deg,#ffffff,#0d1228)';
+    return 'linear-gradient(180deg,#8be6c0,#93c5fd)';  }
+
+  function makeCard(k){
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `
+      position:relative;
+      background: linear-gradient(180deg,rgb(13, 32, 56) 0%,rgb(51, 70, 105) 100%);
+      border:1px rgb(20, 20, 46);
+      border-radius:14px;
+      box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+      display:flex; gap:10px; align-items:center; padding:10px;
+    `;
+
+    const stripe = document.createElement('div');
+    stripe.style.cssText = `width:5px; align-self:stretch; border-radius:8px; background:${stripeGrad(k)};`;
+
+    const iconBadge = document.createElement('div');
+    iconBadge.style.cssText = `
+      flex:0 0 52px; height:52px; border-radius:12px;
+      background:rgba(0, 0, 0, 0.5);
+      border:1px solid rgba(197,205,252,.6);
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 2px 10px rgba(0, 0, 0, 0), inset 0 0 10px rgba(0,0,0,.03);
+      backdrop-filter: blur(2px) saturate(120%);
+    `;
+    const img = document.createElement('img');
+    img.src = resolveIcon(k);
+    img.alt = k;
+    img.style.cssText = 'width:36px; height:36px; display:block;';
+    iconBadge.appendChild(img);
+
+    const body = document.createElement('div');
+    body.style.cssText = 'display:flex; flex-direction:column; gap:3px; min-width:0;';
+
+    const title = document.createElement('div');
+    title.textContent = (k==='심연 : 종말의 숭배자') ? '심숭이' : k;
+    title.style.cssText = "font-size:13px; letter-spacing:.2px; color:#ffffff; font-weight:400; font-family:'DNFBitBitv2',sans-serif;";
+
+    const value = document.createElement('div');
+    value.textContent = Number(summary[k] || 0).toLocaleString();
+    value.style.cssText = 'font-size:20px; font-weight:800; letter-spacing:.2px; color:#ffffff;';
+
+    wrap.appendChild(stripe);
+    wrap.appendChild(iconBadge);
+    wrap.appendChild(body);
+    body.appendChild(title);
+    body.appendChild(value);
+    return wrap;  }
+
+
+  const rows = [
+    ['레벨 상승치','피로도 사용량'],
+    ['종말의 숭배자','심연 : 종말의 숭배자'],
+    ['115Lv 태초','115Lv 에픽','115Lv 레전더리'],
+    ['베누스','나벨','이내 황혼전']
+  ];
+  rows.forEach((arr,idx)=>{
+    const row = document.createElement('div');
+    const cols = arr.length;
+    row.style.cssText = `display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:10px;margin-bottom:${idx===rows.length-1?0:10}px;`;
+    arr.forEach(k=>row.appendChild(makeCard(k)));
+    leftCol.appendChild(row);
+  });
+
+  const calCard = document.createElement('div');
+  calCard.style.cssText='background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);';
+  const calTitle = document.createElement('div');
+  calTitle.textContent = '🗓️ 태초 캘린더';
+  calTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
+  calCard.appendChild(calTitle);
+
+  const byMonth = new Map();
+  const sortedWeeks = weeks.sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
+  sortedWeeks.forEach(w=>{ const m=w.start.getMonth()+1; if(!byMonth.has(m)) byMonth.set(m,[]); byMonth.get(m).push(w); });
+
+  const monthGrid = document.createElement('div');
+  monthGrid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;';
+  function mmdd(d){ return `${d.getMonth()+1}/${d.getDate()}`; }
+
+  for (let m=1; m<=12; m++){
+    const box = document.createElement('section');
+    box.style.cssText='background:#0c132c;border:1px solid #273055;border-radius:10px;padding:8px;';
+    const titleM = document.createElement('div');
+    titleM.textContent = `${m}월`;
+    titleM.style.cssText="font-family:'DNFBitBitv2',sans-serif;font-weight:800;margin-bottom:6px;color:#cdd3ff;font-size:12px;";
+    box.appendChild(titleM);
+    const data = (byMonth.get(m) || []).sort((a,b)=>a.start-b.start);
+    const maxCols = 5;
+    const padded = Array.from({length:maxCols}, (_,i)=> data[i] || null);
+
+    const header = document.createElement('div');
+    header.style.cssText="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:10px;color:#8c93b3;margin-bottom:2px;font-family:'DNFBitBitv2',sans-serif;";
+    padded.forEach(w=>{
+      const cell = document.createElement('div');
+      cell.textContent = w ? `${w.idx}` : '';
+      cell.style.cssText='text-align:center;';
+      header.appendChild(cell);
+    });
+    box.appendChild(header);
+
+    const line = document.createElement('div');
+    line.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:2px;';
+    padded.forEach(w=>{
+      const v = w?.taecho ?? null;
+      const c = document.createElement('div');
+      if (v===null) {
+        c.textContent = '';
+        c.title = '주 데이터 없음';
+        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #384065;background: repeating-linear-gradient(45deg,#131833,#131833 6px,#1a2044 6px,#1a2044 12px);color:#8792c2;font-size:10px;`;
+      } else if (v===0) {
+        c.textContent = '0';
+        c.title = `W${w.idx} ${mmdd(w.start)} · 태초 0개`;
+        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #2a2e46;background:#161a2e;color:#0a0a0a;font-weight:700;font-size:10px;`;
+      } else {
+        c.textContent = String(v);
+        c.title = `W${w.idx} ${mmdd(w.start)} · 태초 ${v}개`;
+        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #b8c7ff;background:linear-gradient(135deg,#8be6c0,#6fb6ff);color:#000000;font-weight:700;box-shadow: inset 0 0 14px rgba(255,255,255,.12);font-size:10px;`;
+      }
+      line.appendChild(c);
+    });
+    box.appendChild(line);
+
+    const dates = document.createElement('div');
+    dates.style.cssText="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:9px;color:#7db0ff;font-family:'DNFBitBitv2',sans-serif;";
+    padded.forEach(w=>{
+      const d = document.createElement('div');
+      d.textContent = w ? mmdd(w.start) : '';
+      d.style.cssText='text-align:center;';
+      dates.appendChild(d);
+    });
+    box.appendChild(dates);
+
+    monthGrid.appendChild(box);
+  }
+  calCard.appendChild(monthGrid);
+
+  rightCol.appendChild(calCard);
+
+  const bottomInfoWrap = document.createElement('div');
+  bottomInfoWrap.style.cssText='margin-top:12px;text-align:center;opacity:.95;';
+  const bottomInfo = document.createElement('div');
+  bottomInfo.textContent = `📅 2025.01.09 ~ ${fmtYMD(END_DATE).replace(/-/g,'.')} · ⏱️ ${nowStr}`;
+  bottomInfo.style.cssText='font-size:12px;color:#98a6d8;';
+  bottomInfoWrap.appendChild(bottomInfo);
+
+  const creator = document.createElement('div');
+  creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
+  const iconUrl = "https://media.discordapp.net/attachments/1389455130859933776/1409409792258211860/1a6bd2b2aab732a9.png?ex=68ad46a8&is=68abf528&hm=c6aad265b5c8ea4e428faf11f84f463982bf6c325230b10d3be73a52a18947f9&=&format=webp&quality=lossless";
+  function mkIcon(){ const i=new Image(); i.src=iconUrl; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
+  const makerText = document.createElement('span');
+  makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
+  makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
+  creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
+  bottomInfoWrap.appendChild(creator);
+
+  const wideChart = document.createElement('div');
+  wideChart.style.cssText = 'position:relative;background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:12px;margin:14px 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);overflow:hidden;';
+  const chartTitle = document.createElement('div');
+  chartTitle.textContent = '📈 주간 태초 분포';
+  chartTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
+  const chartCanvas = document.createElement('canvas');
+  chartCanvas.style.cssText = 'display:block;width:100%;height:200px;';
+  wideChart.appendChild(chartTitle);
+  wideChart.appendChild(chartCanvas);
+
+  container.appendChild(topBrand);
+  container.appendChild(mainGrid);
+  mainGrid.appendChild(leftCol);
+  mainGrid.appendChild(rightCol);
+  container.appendChild(wideChart);
+  container.appendChild(bottomInfoWrap);
+  document.body.prepend(container);
+
+  const script=document.createElement('script');
+  script.src='https://cdn.jsdelivr.net/npm/chart.js';
+  script.onload = () => {
+    const seq = weeks.sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
+    const labels = seq.map((w)=> `W${w.idx}`);
+    const data = seq.map(w => w.taecho || 0);
+    function mountChart() {
+      const ctx = wideChart.querySelector('canvas').getContext('2d');
+      const rect = wideChart.getBoundingClientRect();
+      const canvas = ctx.canvas;
+      canvas.width  = Math.max(520, Math.floor(rect.width - 24));
+      canvas.height = 200;
+      return new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets: [{ label:'', data, borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)', tension:.3, pointRadius:1.8, borderWidth:2 }]},
+        options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: { legend:{ display:false }, tooltip:{ intersect:false, mode:'index' } },
+          scales: {
+            x: { ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true }, grid:{ color:'rgba(42,46,70,.55)'} },
+            y: { ticks:{ color:'#b9c0ff' }, grid:{ color:'rgba(42,46,70,.55)'}, beginAtZero:true }
+          }
+        }
+      });
+    }
+    let chart = mountChart();
+    let resizeId;
+    function onResize() {
+      clearTimeout(resizeId);
+      resizeId = setTimeout(() => {
+        chart.destroy();
+        chart = mountChart();
+      }, 120);
+    }
+    window.addEventListener('resize', onResize, { passive: true });
+  };
+  document.head.appendChild(script);
+})();
