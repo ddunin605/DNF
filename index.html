@@ -30,3 +30,11 @@
   <a class="bm" href="javascript:(async()=>{const u='https://raw.githubusercontent.com/ddunin605/DNF/main/250328 던담 모험단 서치.js';try{const r=await fetch(u+(u.includes('?%27)?%27&%27:%27?%27)+%27t=%27+Date.now());if(!r.ok)throw new Error(%27HTTP %27+r.status);const code=await r.text();const blob=new Blob([code],{type:%27text/javascript%27});const url=URL.createObjectURL(blob);const s=document.createElement(%27script%27);s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert(%27❌ 로딩 실패(Blob): CSP가 blob:을 막음%27);document.body.appendChild(s);}catch(e){alert(%27❌ 불러오기 실패: %27+e.message);}})();">던담-서치</a>
 </div>
 
+<!-- 던담 필터 보기 -->
+<div class="card">
+  <h2>③ 던담 필터 보기</h2>
+  <p>던담 검색결과 페이지에서 필터 패널(직업/명성/섹션 토글/정렬)을 띄웁니다.</p>
+  <a class="bm" href="javascript:(async()=>{const MUST='dundam.xyz';if(!location.hostname.endsWith(MUST)){if(confirm('던담으로 이동할까요?'))location.href='https://dundam.xyz/';return;}const u='https://raw.githubusercontent.com/ddunin605/DNF/refs/heads/main/250828%20%EB%8D%98%EB%8B%B4%20%ED%95%84%ED%84%B0.js';const q=u+(u.includes('?')?'&':'?')+'t='+Date.now();try{const r=await fetch(q);if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert('❌ 로딩 실패(Blob): CSP가 blob:을 막음');document.body.appendChild(s);}catch(e){const s=document.createElement('script');s.src=q;s.onerror=()=>alert('❌ 불러오기 실패: '+e.message+' (사이트 CSP 가능)');document.body.appendChild(s);}})();">던담-필터</a>
+</div>
+
+
