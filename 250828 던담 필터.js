@@ -86,7 +86,7 @@
     </div>
 
     <div class="sec">
-      <label>특정 직업</label>
+      <label>직업</label>
       <select id="fp-job">
         <option value="">(전체)</option>
         ${jobs.map(j => `<option value="${j}">${j}</option>`).join('')}
@@ -94,23 +94,22 @@
     </div>
 
     <div class="sec">
-      <label>명성 범위 (표현식 입력 가능)</label>
+      <label>명성</label>
       <input id="fp-fameexpr" type="text" placeholder="예: >50000 <60000 또는 50000-60000">
       <div class="small">지원: <code>&gt;N</code>, <code>&gt;=N</code>, <code>&lt;N</code>, <code>&lt;=N</code>, <code>N-M</code>, 숫자 한 개(최소값)</div>
     </div>
 
     <div class="sec">
-      <label>보고싶은 것만 보기 (카드 내부 섹션 토글)</label>
+      <label>항목</label>
       <div class="row" id="fp-blocks">
         ${Object.keys(blockMap).map(k => `
           <label class="chip"><input type="checkbox" data-block="${k}" checked> ${k}</label>
         `).join('')}
       </div>
-      <div class="small muted">숨김은 카드에만 적용. 실제 데이터 삭제/누락 아님.</div>
     </div>
 
     <div class="sec">
-      <label>배열 바꾸기 (정렬)</label>
+      <label>정렬</label>
       <div class="btns">
         <button class="btn2" data-sort="fame:asc">명성↑</button>
         <button class="btn2" data-sort="fame:desc">명성↓</button>
