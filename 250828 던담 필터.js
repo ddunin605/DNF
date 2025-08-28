@@ -111,7 +111,6 @@
         <label class="radio"><input type="radio" name="role" value="버퍼"> 버퍼</label>
         <label class="radio"><input type="radio" name="role" value="딜러"> 딜러</label>
       </div>
-      <div class="small muted">버퍼 키워드: 뮤즈, 크루세이더, 인챈트리스, 미스트리스, 팔라딘, 패러메딕, 키메라</div>
     </div>
 
     <div class="sec">
@@ -127,7 +126,6 @@
           <label class="chip"><input type="checkbox" data-block="${k}" checked> ${k}</label>
         `).join('')}
       </div>
-      <div class="small muted">숨김이 많으면 카드가 자동으로 ‘컴팩트’하게 줄어듭니다.</div>
     </div>
 
     <div class="sec">
