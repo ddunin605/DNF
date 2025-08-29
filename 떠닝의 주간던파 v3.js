@@ -103,20 +103,6 @@
   const leftCol = document.createElement('div');
   const rightCol = document.createElement('div');
 
-  const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
-  const ICONS = {
-    "레벨 상승치": "week_ico01.png",
-    "피로도 사용량": "week_ico02.png",
-    "115Lv 태초": "week_ico19.png",
-    "115Lv 에픽": "week_ico04.png",
-    "115Lv 레전더리": "week_ico21.png",
-    "심연 : 종말의 숭배자": "week_ico18.png",
-    "종말의 숭배자": "week_ico18.png",
-    "나벨": "week_ico22.png",
-    "베누스": "week_ico20.png",
-    "이내 황혼전": "week_ico23.png"
-  };
-  // --- 여기부터 교체 ---
   const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';  // 너의 깃헙 Pages 주소 + 폴더
 
   const CUSTOM_ICON_FILES = {
@@ -380,5 +366,6 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
