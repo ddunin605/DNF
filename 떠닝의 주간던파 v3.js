@@ -116,19 +116,47 @@
     "베누스": "week_ico20.png",
     "이내 황혼전": "week_ico23.png"
   };
-  const CUSTOM_ICONS = {
-  '레벨 상승치': 'https://media.discordapp.net/attachments/1389455130859933776/1409450395054506034/week_ico01.png?ex=68ad6c78&is=68ac1af8&hm=c5669e8ecddfbf62b2e91e4c4ef8e6e52f0763b4e44eb11120009e14509fbac6&=&format=webp&quality=lossless',
-  '피로도 사용량': 'https://media.discordapp.net/attachments/1389455130859933776/1409450395432128512/week_ico02.png?ex=68ad6c78&is=68ac1af8&hm=6239b903be24e37391a5e1f8de1990ce4c94f68ee4c133abe40c8eb1f922a424&=&format=webp&quality=lossless',
-  '115Lv 에픽': 'https://media.discordapp.net/attachments/1389455130859933776/1409450395767541851/week_ico04.png?ex=68ad6c78&is=68ac1af8&hm=3555dc47362e3df1b9004f007445c00b592a2841d05eb811ec10984e3b817c20&=&format=webp&quality=lossless',
-  '이내 황혼전': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410959437824/week_ico23.png?ex=68ad6c7c&is=68ac1afc&hm=6ab78cea9c7e5622b3ee258928d0af9abf2eb0f0f9f9210e8a9e57b3a1addd22&=&format=webp&quality=lossless',
-  '나벨': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410695200820/week_ico22.png?ex=68ad6c7c&is=68ac1afc&hm=f5c940e7c7ecbccd3b6d35832abbf08a331ad01d0b8399d1451c937d3cfa25f6&=&format=webp&quality=lossless',
-  '115Lv 레전더리': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410489417739/week_ico21.png?ex=68ad6c7c&is=68ac1afc&hm=ebdfc13c1ba6116d250215cd79f4d4908e73c26c03196188d33e45b2998ea7be&=&format=webp&quality=lossless',
-  '베누스': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410258857994/week_ico20.png?ex=68ad6c7c&is=68ac1afc&hm=0f54e9c0d18adc4849b7e92c3dfb605816b179a8f8d103cde8da0a0948738fd2&=&format=webp&quality=lossless',
-  '115Lv 태초': 'https://media.discordapp.net/attachments/1389455130859933776/1409450410032500746/week_ico19.png?ex=68ad6c7c&is=68ac1afc&hm=cba2ab67776a50ea538192a652405a1009a5fa02e47f6138ada6084e56dc3d7e&=&format=webp&quality=lossless',
-  '심연 : 종말의 숭배자': 'https://media.discordapp.net/attachments/1389455130859933776/1409450409785032736/week_ico18.png?ex=68ad6c7c&is=68ac1afc&hm=32640542fadf9e15bfbfc243a7fe6a403382f0f13eb29c4c5dc214fe56bd716c&=&format=webp&quality=lossless',
-  '종말의 숭배자': 'https://media.discordapp.net/attachments/1389455130859933776/1409450396354740254/week_ico18_1.png?ex=68ad6c78&is=68ac1af8&hm=dd2acf97d62bd76816fd39ca2ee3c6cc9453adf5c0ebc54103dd124a6b82cb9d&=&format=webp&quality=lossless'
+  // --- 여기부터 교체 ---
+  const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';  // 너의 깃헙 Pages 주소 + 폴더
+
+  const CUSTOM_ICON_FILES = {
+    '레벨 상승치': 'week_ico01.png',
+    '피로도 사용량': 'week_ico02.png',
+    '115Lv 에픽': 'week_ico04.png',
+    '심연 : 종말의 숭배자': 'week_ico18.png',
+    '종말의 숭배자': 'week_ico18_1.png',
+    '115Lv 태초': 'week_ico19.png',
+    '베누스': 'week_ico20.png',
+    '115Lv 레전더리': 'week_ico21.png',
+    '나벨': 'week_ico22.png',
+    '이내 황혼전': 'week_ico23.png',
   };
-  const resolveIcon = k => (CUSTOM_ICONS[k] && CUSTOM_ICONS[k].trim()) || (ICON_BASE + (ICONS[k] || 'week_ico04.png'));
+
+  const CUSTOM_ICONS = Object.fromEntries(
+    Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, ASSET_BASE + fname + '?v=20250829'])
+  );
+
+  const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
+  const ICONS = {
+    "레벨 상승치": "week_ico01.png",
+    "피로도 사용량": "week_ico02.png",
+    "115Lv 태초": "week_ico19.png",
+    "115Lv 에픽": "week_ico04.png",
+    "115Lv 레전더리": "week_ico21.png",
+    "심연 : 종말의 숭배자": "week_ico18.png",
+    "종말의 숭배자": "week_ico18.png",
+    "나벨": "week_ico22.png",
+    "베누스": "week_ico20.png",
+    "이내 황혼전": "week_ico23.png"
+  };
+
+  const resolveIcon = (k) => {
+    if (CUSTOM_ICONS[k]) return CUSTOM_ICONS[k];
+    if (ICONS[k]) return ICON_BASE + ICONS[k];
+    return ICON_BASE + 'week_ico04.png';
+  };
+  // --- 교체 끝 ---
+
 
   function stripeGrad(k){
     if (k==='레벨 상승치' || k==='피로도 사용량') return 'linear-gradient(180deg,#9bd1ff,#5fa8ff)';
@@ -352,4 +380,5 @@
   };
   document.head.appendChild(script);
 })();
+
 
