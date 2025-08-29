@@ -161,7 +161,7 @@
     wrap.style.cssText = `
       position:relative;
       background: linear-gradient(180deg,rgb(13, 32, 56) 0%,rgb(51, 70, 105) 100%);
-      border:1px rgb(20, 20, 46);
+      border:1px solid rgb(20, 20, 46);
       border-radius:14px;
       box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
       display:flex; gap:10px; align-items:center; padding:10px;
@@ -301,7 +301,7 @@
 
   const creator = document.createElement('div');
   creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
-  const iconUrl = "https://media.discordapp.net/attachments/1389455130859933776/1409409792258211860/1a6bd2b2aab732a9.png?ex=68ad46a8&is=68abf528&hm=c6aad265b5c8ea4e428faf11f84f463982bf6c325230b10d3be73a52a18947f9&=&format=webp&quality=lossless";
+  const iconUrl = ASSET_BASE + 'author.png?v=20250829';
   function mkIcon(){ const i=new Image(); i.src=iconUrl; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
   const makerText = document.createElement('span');
   makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
@@ -366,6 +366,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
