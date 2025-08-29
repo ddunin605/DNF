@@ -194,6 +194,7 @@
     const img = document.createElement('img');
     img.src = resolveIcon(k);
     img.alt = k;
+    img.crossOrigin = 'anonymous';
     img.style.cssText = 'width:36px; height:36px; display:block;';
     iconBadge.appendChild(img);
 
@@ -314,7 +315,7 @@
   const creator = document.createElement('div');
   creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
   const iconUrl = 'https://ddunin605.github.io/DNF/ddunin.png' + `?v=${encodeURIComponent(ASSET_VERSION)}`;
-  function mkIcon(){ const i=new Image(); i.src=iconUrl; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
+  function mkIcon(){ const i=new Image(); i.src=iconUrl; img.crossOrigin = 'anonymous'; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
   const makerText = document.createElement('span');
   makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
   makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
@@ -338,6 +339,78 @@
   container.appendChild(wideChart);
   container.appendChild(bottomInfoWrap);
   document.body.prepend(container);
+
+    // === html-to-image 로더 ===
+  async function ensureHtmlToImage(){
+    if (window.htmlToImage) return;
+    await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js';
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+  
+  // === 공통 옵션 ===
+  const captureOpts = {
+    cacheBust: true,
+    pixelRatio: 2,
+    backgroundColor: '#0e111d',
+  };
+  
+  // === PNG 저장 ===
+  async function saveSummaryAsPNG(){
+    await ensureHtmlToImage();
+    // 렌더 안정화
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  
+    const node = container; // #df-summary-box
+    const filename = `떠닝_중천_모아보기_${fmtYMD(NOW)}.png`;
+    const dataUrl = await window.htmlToImage.toPng(node, captureOpts);
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = filename; a.click();
+  }
+  
+  // === PNG를 클립보드로 복사 ===
+  async function copySummaryToClipboard(){
+    await ensureHtmlToImage();
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  
+    const node = container;
+    const blob = await window.htmlToImage.toBlob(node, captureOpts);
+    if (!blob) throw new Error('이미지 생성 실패');
+    if (!navigator.clipboard || !window.ClipboardItem) throw new Error('클립보드 API 미지원');
+  
+    const item = new ClipboardItem({ [blob.type]: blob });
+    await navigator.clipboard.write([item]);
+    // 선택: 사용자 피드백
+    // alert('이미지가 클립보드에 복사되었어요!');
+  }
+  
+  // === 툴바(박스 외부) 만들기 ===
+  // container 위(밖)에 표시
+  const toolbar = document.createElement('div');
+  toolbar.id = 'df-save-toolbar';
+  toolbar.style.cssText = `
+    display:flex; gap:8px; justify-content:flex-end;
+    max-width:1160px; margin:0 auto 10px; padding:0 4px;
+  `;
+  function mkBtn(label, onClick){
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.onclick = onClick;
+    b.style.cssText = `
+      padding:6px 10px;border-radius:999px;
+      background:linear-gradient(180deg,#1b2142,#141a34);
+      border:1px solid #2a2f50;color:#cfe1ff;
+      font-weight:700;font-size:11px;cursor:pointer;
+    `;
+    return b;
+  }
+  toolbar.appendChild(mkBtn('PNG 저장', saveSummaryAsPNG));
+  toolbar.appendChild(mkBtn('클립보드 복사', copySummaryToClipboard));
+  
+  // body 최상단에 container가 이미 들어갔으니, 그 "앞"에 툴바를 삽입
+  document.body.insertBefore(toolbar, container);
 
   const script=document.createElement('script');
   script.src='https://cdn.jsdelivr.net/npm/chart.js';
@@ -378,6 +451,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
