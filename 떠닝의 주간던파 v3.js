@@ -315,7 +315,7 @@
   const creator = document.createElement('div');
   creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
   const iconUrl = 'https://ddunin605.github.io/DNF/ddunin.png' + `?v=${encodeURIComponent(ASSET_VERSION)}`;
-  function mkIcon(){ const i=new Image(); i.src=iconUrl; img.crossOrigin = 'anonymous'; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
+  function mkIcon(){ const i=new Image(); i.src=iconUrl; i.crossOrigin = 'anonymous'; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
   const makerText = document.createElement('span');
   makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
   makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
@@ -451,6 +451,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
