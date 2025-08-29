@@ -105,6 +105,18 @@
 
   const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';  // 너의 깃헙 Pages 주소 + 폴더
 
+  const ASSET_VERSION = await (async () => {
+    try {
+      const r = await fetch(ASSET_BASE + 'version.txt?ts=' + Date.now(), { cache: 'no-store' });
+      if (r.ok) return (await r.text()).trim();
+    } catch (e) {}
+    // 실패 시: "오늘 날짜"로라도 변경 → 최소 하루마다 새로고침
+    return new Date().toISOString().slice(0,10);
+  })();
+  
+   // 파일명 → 완성 URL
+  const v = (f) => `${ASSET_BASE}${f}?v=${encodeURIComponent(ASSET_VERSION)}`; 
+  
   const CUSTOM_ICON_FILES = {
     '레벨 상승치': 'week_ico01.png',
     '피로도 사용량': 'week_ico02.png',
@@ -119,7 +131,7 @@
   };
 
   const CUSTOM_ICONS = Object.fromEntries(
-    Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, ASSET_BASE + fname + '?v=20250829'])
+    Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)])
   );
 
   const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
@@ -301,7 +313,7 @@
 
   const creator = document.createElement('div');
   creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
-  const iconUrl = 'https://ddunin605.github.io/DNF/ddunin.png?v=20250829';
+  const iconUrl = 'https://ddunin605.github.io/DNF/ddunin.png' + `?v=${encodeURIComponent(ASSET_VERSION)}`;
   function mkIcon(){ const i=new Image(); i.src=iconUrl; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
   const makerText = document.createElement('span');
   makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
@@ -366,6 +378,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
