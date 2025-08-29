@@ -412,6 +412,15 @@
   // body 최상단에 container가 이미 들어갔으니, 그 "앞"에 툴바를 삽입
   document.body.insertBefore(toolbar, container);
 
+    // 기존 툴바가 있으면 지우고(중복 방지)
+  document.getElementById('df-save-toolbar')?.remove();
+  
+  // 박스(#df-summary-box) "바로 앞"에 붙이기 — 가장 확실
+  container.before(toolbar);
+  
+  // (참고) 구형 브라우저면 아래도 OK
+  // (container.parentNode || document.body).insertBefore(toolbar, container);
+  
   const script=document.createElement('script');
   script.src='https://cdn.jsdelivr.net/npm/chart.js';
   script.onload = () => {
@@ -451,6 +460,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
