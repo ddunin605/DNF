@@ -1,120 +1,114 @@
+// === 던담 모험단 검색 결과 파서 (모험단명 무시하고 닉네임만 추출) ===
+
+// 날짜와 시간을 YYMMDD HH:mm 형식으로 포맷
 function getFormattedDate() {
-    let date = new Date();
-    let year = date.getFullYear().toString().slice(-2); 
-    let month = String(date.getMonth() + 1).padStart(2, '0'); 
-    let day = String(date.getDate()).padStart(2, '0'); 
-    let hours = String(date.getHours()).padStart(2, '0'); 
-    let minutes = String(date.getMinutes()).padStart(2, '0'); 
-    return `${year}${month}${day} ${hours}:${minutes}`;
+  const d = new Date();
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const HH = String(d.getHours()).padStart(2, '0');
+  const MM = String(d.getMinutes()).padStart(2, '0');
+  return `${yy}${mm}${dd} ${HH}:${MM}`;
 }
 
-
+// 숫자 단위 포맷팅 (딜러용)
 function formatText(value) {
-    value = value.replace(/,/g, '').trim(); 
+  value = String(value || '').replace(/,/g, '').trim();
+  if (!value) return '0';
 
-    if (value.includes('억')) {
-        let parts = value.split('억');
-        let eok = parseFloat(parts[0].trim());
-        let remainder = parts[1] ? parseFloat(parts[1].replace('만', '').trim()) : 0;
-        return ((eok * 10000 + remainder) / 10000).toFixed(2);
-    } else if (value.includes('만')) {
-        return (parseFloat(value.replace('만', '').trim()) / 10000).toFixed(2);
-    } else {
-        return (parseFloat(value) / 100000000).toFixed(2);
-    }
+  if (value.includes('억')) {
+    const parts = value.split('억');
+    const eok = parseFloat(parts[0].trim()) || 0;
+    const remainder = parts[1] ? parseFloat(parts[1].replace('만', '').trim()) || 0 : 0;
+    return ((eok * 10000 + remainder) / 10000).toFixed(2);
+  } else if (value.includes('만')) {
+    const man = parseFloat(value.replace('만', '').trim()) || 0;
+    return (man / 10000).toFixed(2);
+  } else {
+    const n = parseFloat(value) || 0;
+    return (n / 100000000).toFixed(2);
+  }
 }
 
-
+// 버프력 포맷팅 (버퍼용)
 function formatBuffValue(value) {
-    let num = parseInt(value.replace(/,/g, ''));
-    return (num / 10000).toFixed(1);
+  const num = parseInt(String(value || '').replace(/,/g, ''), 10) || 0;
+  return (num / 10000).toFixed(1);
 }
 
+// 닉네임만 추출 (모험단/서버 span 제거)
+function getPureName(scon) {
+  const nameEl = scon.querySelector('.seh_name .name');
+  if (!nameEl) return '';
 
-const nicknameFixMap = {
-    '무떠닝': '떠닝무',
-    '도치떠닝': '떠닝도치',
-    '원시오단': '시오단원',
-    '소환열기': '열기소환',
-};
+  const clone = nameEl.cloneNode(true);
+  // 모험단, 서버, 불필요한 태그 제거
+  clone.querySelectorAll('.adventure, .introd, .badge, .tag').forEach(el => el.remove());
+  return clone.textContent.replace(/\s+/g, '').trim();
+}
 
+// 메인 실행
+(function run() {
+  const cards = document.querySelectorAll('.scon');
+  if (!cards.length) {
+    alert('검색 결과 카드(.scon)를 찾지 못했어요.');
+    return;
+  }
 
-let dealers = [];
-let buffers = [];
-let sconElements = document.querySelectorAll('.scon');
+  const dealers = [];
+  const buffers = [];
 
-sconElements.forEach((scon) => {
-    let nameElement = scon.querySelector('.seh_name .name');
-    let serverElement = scon.querySelector('.seh_name .introd.server');
-    let dealElement = scon.querySelector('.stat_a .val');
-    let buffElement = scon.querySelector('.stat_b .val');
-    let specialBuffElement = scon.querySelector('.stat_b > li:nth-child(3) > div > span.val');
-    let jobElement = scon.querySelector('.seh_job .sev');
+  cards.forEach((scon) => {
+    let name = getPureName(scon);
 
-    if (nameElement) {
-        let name = nameElement.textContent.trim();
-        let server = serverElement ? serverElement.textContent.trim() : '';
+    const jobElement = scon.querySelector('.seh_job .sev');
+    const job = jobElement ? jobElement.textContent.replace('眞 ', '').trim() : '직업 없음';
 
-        if (server) {
-            name = name.replace(server, '').trim();
-        }
+    const dealElement = scon.querySelector('.stat_a .val');
+    const buffElement = scon.querySelector('.stat_b .val');
+    const specialBuffElement = scon.querySelector('.stat_b > li:nth-child(3) > div > span.val');
 
-        
-        if (nicknameFixMap.hasOwnProperty(name)) {
-            name = nicknameFixMap[name];
-        }
+    let value = '';
 
-        let job = jobElement ? jobElement.textContent.replace('眞 ', '').trim() : '직업 없음';
-        let value = '';
-
-        if (dealElement) {
-            value = dealElement.textContent.trim();
-            value = formatText(value);
-            dealers.push({ name: name, job: job, value: value });
-        } else if (job.includes('인챈트리스') && specialBuffElement) {
-            value = specialBuffElement.textContent.trim();
-            value = formatBuffValue(value);
-            buffers.push({ name: name, job: job, value: value });
-        } else if (buffElement) {
-            value = buffElement.textContent.trim();
-            value = formatBuffValue(value);
-            buffers.push({ name: name, job: job, value: value });
-        } else {
-            value = 'No Value';
-            dealers.push({ name: name, job: job, value: value });
-        }
-    }
-});
-
-
-dealers.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
-buffers.sort((a, b) => parseInt(b.value.replace(/[^\d]/g, '')) - parseInt(a.value.replace(/[^\d]/g, '')));
-
-
-let dateTime = getFormattedDate();
-
-
-let dealerResult = dealers.map(char => `${char.name} ${char.value}`).join('\n');
-let bufferResult = buffers.map(char => `${char.name} ${char.value}`).join('\n');
-
-let result = `${dateTime}\n${dealerResult}\n\n${bufferResult}`;
-
-
-console.log(result);
-
-const textArea = document.createElement('textarea');
-textArea.value = result;
-document.body.appendChild(textArea);
-textArea.focus();
-textArea.select();
-try {
-    const successful = document.execCommand('copy');
-    if (successful) {
-        console.log('Data copied to clipboard');
+    if (dealElement) {
+      value = formatText(dealElement.textContent.trim());
+      dealers.push({ name, job, value });
+    } else if (job.includes('인챈트리스') && specialBuffElement) {
+      value = formatBuffValue(specialBuffElement.textContent.trim());
+      buffers.push({ name, job, value });
+    } else if (buffElement) {
+      value = formatBuffValue(buffElement.textContent.trim());
+      buffers.push({ name, job, value });
     } else {
-        console.error('Failed to copy');
+      value = '0';
+      dealers.push({ name, job, value });
     }
-} catch (err) {
-    console.error('Failed to copy: ', err);
-}
-document.body.removeChild(textArea);
+  });
+
+  // 내림차순 정렬
+  dealers.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+  buffers.sort((a, b) => parseFloat(b.value) - parseFloat(a.value));
+
+  // 결과 문자열
+  const dealerResult = dealers.map(c => `${c.name} ${Math.round(parseFloat(c.value) || 0)}`).join('\n');
+  const bufferResult = buffers.map(c => `${c.name} ${Math.round(parseFloat(c.value) || 0)}`).join('\n');
+
+  const dateTime = getFormattedDate();
+  const result = `${dateTime}\n${dealerResult}\n\n${bufferResult}`;
+
+  // 출력 + 복사
+  console.log(result);
+  const ta = document.createElement('textarea');
+  ta.value = result;
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    console.log('Data copied to clipboard');
+  } catch (e) {
+    console.error('Failed to copy:', e);
+  } finally {
+    document.body.removeChild(ta);
+  }
+})();
