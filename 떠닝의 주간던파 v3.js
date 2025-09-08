@@ -358,33 +358,72 @@
   };
   
   // === PNG 저장 ===
-  async function saveSummaryAsPNG(){
-    await ensureHtmlToImage();
-    // 렌더 안정화
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  async function saveSummaryAsPNG() {
+    const target = document.getElementById('df-summary-box');
+    if (!target) return alert('요약 박스를 찾지 못했어요.');
   
-    const node = container; // #df-summary-box
-    const filename = `떠닝_중천_모아보기_${fmtYMD(NOW)}.png`;
-    const dataUrl = await window.htmlToImage.toPng(node, captureOpts);
+    // 1) 정확한 크기 계산
+    const rect = target.getBoundingClientRect();
+    const W = Math.round(rect.width);
+    const H = Math.round(rect.height);
+  
+    // 2) 툴바/불필요 요소는 제외
+    const shouldKeep = (node) => {
+      if (!node || node.nodeType !== 1) return true;
+      const id = node.id || '';
+      if (id === 'df-save-toolbar') return false;    // 툴바 제외
+      return true;
+    };
+  
+    // 3) 고해상도 & 배경 지정해서만 캡처
+    const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2));
+    const dataUrl = await htmlToImage.toPng(target, {
+      width: W,
+      height: H,
+      pixelRatio: scale,
+      skipAutoScale: true,
+      backgroundColor: '#0E111D', // 네 디자인 배경색
+      filter: shouldKeep,
+      style: {
+        margin: '0',              // margin 영향 제거
+        transform: 'none',        // transform 영향 제거
+        boxShadow: 'none',        // 그림자 경계에서 투명픽셀 줄이기
+      },
+    });
+  
+    // 4) 다운로드
     const a = document.createElement('a');
-    a.href = dataUrl; a.download = filename; a.click();
+    const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    a.href = dataUrl;
+    a.download = `떠닝_중천_모아보기_${ts}.png`;
+    a.click();
   }
-  
   // === PNG를 클립보드로 복사 ===
-  async function copySummaryToClipboard(){
-    await ensureHtmlToImage();
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  async function copySummaryToClipboard() {
+    const target = document.getElementById('df-summary-box');
+    if (!target) return alert('요약 박스를 찾지 못했어요.');
   
-    const node = container;
-    const blob = await window.htmlToImage.toBlob(node, captureOpts);
-    if (!blob) throw new Error('이미지 생성 실패');
-    if (!navigator.clipboard || !window.ClipboardItem) throw new Error('클립보드 API 미지원');
+    const rect = target.getBoundingClientRect();
+    const W = Math.round(rect.width);
+    const H = Math.round(rect.height);
+    const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2));
   
-    const item = new ClipboardItem({ [blob.type]: blob });
-    await navigator.clipboard.write([item]);
-    // 선택: 사용자 피드백
-    // alert('이미지가 클립보드에 복사되었어요!');
+    const blob = await htmlToImage.toBlob(target, {
+      width: W,
+      height: H,
+      pixelRatio: scale,
+      skipAutoScale: true,
+      backgroundColor: '#0E111D',
+      filter: (node) => (node.id !== 'df-save-toolbar'),
+      style: { margin: '0', transform: 'none', boxShadow: 'none' },
+    });
+    await navigator.clipboard.write([
+      new ClipboardItem({ [blob.type]: blob })
+    ]);
+    // (선택) 토스트 알림
+    // showToast('복사 완료!');
   }
+
   
   // === 툴바(박스 외부) 만들기 ===
   // container 위(밖)에 표시
@@ -495,6 +534,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
