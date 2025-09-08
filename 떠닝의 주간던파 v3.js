@@ -155,7 +155,26 @@
   };
   // --- 교체 끝 ---
 
+  function resizeCanvasToContainer(canvas, container, cssHeight = 200) {
+    const dpr = window.devicePixelRatio || 1; // 디스플레이 배율
+    const cssWidth = Math.floor(container.clientWidth); // 컨테이너의 실제 너비
+  
+    // CSS 크기 설정
+    canvas.style.width = cssWidth + 'px';
+    canvas.style.height = cssHeight + 'px';
+  
+    // 실제 비트맵 크기 설정
+    canvas.width = Math.floor(cssWidth * dpr);
+    canvas.height = Math.floor(cssHeight * dpr);
+  
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 배율 보정
+  
+    return { ctx, cssWidth, cssHeight, dpr };
+  }
 
+
+  
   function stripeGrad(k){
     if (k==='레벨 상승치' || k==='피로도 사용량') return 'linear-gradient(180deg,#9bd1ff,#5fa8ff)';
     if (k==='115Lv 태초') return 'linear-gradient(180deg,#8be6c0,#6fb6ff)';
@@ -321,7 +340,8 @@
   makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
   creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
   bottomInfoWrap.appendChild(creator);
-
+  
+  
   const wideChart = document.createElement('div');
   wideChart.style.cssText = 'position:relative;background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:12px;margin:14px 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);overflow:hidden;';
   const chartTitle = document.createElement('div');
@@ -424,33 +444,6 @@
     // showToast('복사 완료!');
   }
 
-  
-  // === 툴바(박스 외부) 만들기 ===
-  // container 위(밖)에 표시
-  const toolbar = document.createElement('div');
-  toolbar.id = 'df-save-toolbar';
-  toolbar.style.cssText = `
-    display:flex; gap:8px; justify-content:flex-end;
-    max-width:1160px; margin:0 auto 10px; padding:0 4px;
-  `;
-  function mkBtn(label, onClick){
-    const b = document.createElement('button');
-    b.textContent = label;
-    b.onclick = onClick;
-    b.style.cssText = `
-      padding:6px 10px;border-radius:999px;
-      background:linear-gradient(180deg,#1b2142,#141a34);
-      border:1px solid #2a2f50;color:#cfe1ff;
-      font-weight:700;font-size:11px;cursor:pointer;
-    `;
-    return b;
-  }
-  toolbar.appendChild(mkBtn('PNG 저장', saveSummaryAsPNG));
-  toolbar.appendChild(mkBtn('클립보드 복사', copySummaryToClipboard));
-  
-  // body 최상단에 container가 이미 들어갔으니, 그 "앞"에 툴바를 삽입
-  document.body.insertBefore(toolbar, container);
-
   // 1) 기존 툴바가 있으면 먼저 제거 (중복/깜빡임 방지)
   document.getElementById('df-save-toolbar')?.remove();
   
@@ -503,15 +496,11 @@
     const data = seq.map(w => w.taecho || 0);
     function mountChart() {
       const ctx = wideChart.querySelector('canvas').getContext('2d');
-      const rect = wideChart.getBoundingClientRect();
-      const canvas = ctx.canvas;
-      canvas.width  = Math.max(520, Math.floor(rect.width - 24));
-      canvas.height = 200;
       return new Chart(ctx, {
         type: 'line',
         data: { labels, datasets: [{ label:'', data, borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)', tension:.3, pointRadius:1.8, borderWidth:2 }]},
         options: {
-          responsive: false,
+          responsive: true,          // ✅ 반응형 활성화
           maintainAspectRatio: false,
           plugins: { legend:{ display:false }, tooltip:{ intersect:false, mode:'index' } },
           scales: {
@@ -519,7 +508,7 @@
             y: { ticks:{ color:'#b9c0ff' }, grid:{ color:'rgba(42,46,70,.55)'}, beginAtZero:true }
           }
         }
-      });
+      });      
     }
     let chart = mountChart();
     let resizeId;
@@ -534,6 +523,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
