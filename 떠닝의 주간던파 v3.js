@@ -412,10 +412,45 @@
   // body 최상단에 container가 이미 들어갔으니, 그 "앞"에 툴바를 삽입
   document.body.insertBefore(toolbar, container);
 
-    // 기존 툴바가 있으면 지우고(중복 방지)
+  // 1) 기존 툴바가 있으면 먼저 제거 (중복/깜빡임 방지)
   document.getElementById('df-save-toolbar')?.remove();
   
-  // 박스(#df-summary-box) "바로 앞"에 붙이기 — 가장 확실
+  // 2) 새 툴바 생성
+  const toolbar = document.createElement('div');
+  toolbar.id = 'df-save-toolbar';
+  toolbar.style.cssText = `
+    display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;
+    max-width:1160px; margin:0 auto 10px; padding:0 4px;
+    box-sizing:border-box;
+  `;
+  
+  // 3) 버튼 팩토리
+  function mkBtn(label, onClick){
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.onclick = onClick;
+    b.style.cssText = `
+      padding:8px 14px; border-radius:999px;
+      background:linear-gradient(180deg,#1b2142,#141a34);
+      border:1px solid #2a2f50; color:#cfe1ff;
+      font-weight:700; font-size:12px; cursor:pointer;
+      line-height:1; user-select:none; outline:none;
+      box-shadow:0 1px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04);
+      transition:transform .06s ease, box-shadow .12s ease, filter .12s ease;
+    `;
+    b.onmouseenter = () => { b.style.filter = 'brightness(1.06)'; };
+    b.onmouseleave = () => { b.style.filter = 'none'; };
+    b.onmousedown  = () => { b.style.transform = 'translateY(1px)'; };
+    b.onmouseup    = () => { b.style.transform = 'translateY(0)'; };
+    return b;
+  }
+  
+  // 4) 버튼 부착
+  toolbar.appendChild(mkBtn('PNG 저장', saveSummaryAsPNG));
+  toolbar.appendChild(mkBtn('클립보드 복사', copySummaryToClipboard));
+  
+  // 5) 박스(#df-summary-box) "바로 앞"에 1회만 삽입
   container.before(toolbar);
   
   // (참고) 구형 브라우저면 아래도 OK
@@ -460,6 +495,7 @@
   };
   document.head.appendChild(script);
 })();
+
 
 
 
