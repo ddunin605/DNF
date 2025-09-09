@@ -1,9 +1,11 @@
 (async function () {
+  // ===== 기본 수집/계산 =====
   const START_DATE = new Date('2025-01-09T06:00:00');
   const END_DATE = (() => { const t = new Date(); const r = new Date(t); const d = r.getDay(); const diff = (4 - d + 7) % 7; r.setDate(r.getDate() + diff); r.setHours(6, 0, 0, 0); return r; })();
   const NOW = new Date();
   const fmtYMD = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const delay = ms => new Promise(res => setTimeout(res, ms));
+
   async function clickAllMoreButtons() {
     const maxClicks = 100;
     const deadline = Date.now() + 30000;
@@ -22,6 +24,7 @@
   const summary = { '레벨 상승치': 0, '피로도 사용량': 0, '115Lv 태초': 0, '115Lv 에픽': 0, '115Lv 레전더리': 0, '심연 : 종말의 숭배자': 0, '종말의 숭배자': 0, '나벨': 0, '베누스': 0, '이내 황혼전': 0 };
   const weeks = [];
   const normalize = s => (s||'').replace(/\s*아이템$/,'').replace(/\s*클리어$/,'').replace(/\s+/g,' ').trim();
+
   document.querySelectorAll('#weeklyArea dl').forEach(dl => {
     const span = dl.querySelector('dt span')?.textContent || '';
     const m = span.match(/(\d{4}\.\d{2}\.\d{2})\s+06시\s*~\s*(\d{4}\.\d{2}\.\d{2})\s+06시/);
@@ -62,11 +65,12 @@
   moheomdan = (gm && gm[1]) ? gm[1] : (document.querySelector('#personalArea ul.name li')?.textContent.trim() || '모험단');
   const nowStr = NOW.toLocaleString('ko-KR');
 
+  // ===== 렌더 =====
   document.querySelector('#df-summary-box')?.remove();
 
   const style = document.createElement('style');
   style.textContent = `
-  @font-face{font-family:'DNFBitBitv2';font-style:normal;font-weight:400;src:url('https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf') format('opentype')}
+    @font-face{font-family:'DNFBitBitv2';font-style:normal;font-weight:400;src:url('https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf') format('opentype')}
   `;
   document.head.appendChild(style);
   await Promise.all([document.fonts.load("34px 'DNFBitBitv2'"), document.fonts.ready]);
@@ -78,6 +82,11 @@
     margin:18px auto;max-width:1160px;box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
     font-family:'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   `;
+  // ★ 푸터 겹침/잘림 방지(핵심)
+  container.style.position = 'relative';
+  container.style.overflow  = 'visible';
+  container.style.zIndex    = '4000';
+  container.style.paddingBottom = '32px';
 
   const topBrand = document.createElement('div');
   topBrand.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;';
@@ -99,82 +108,26 @@
 
   const mainGrid = document.createElement('div');
   mainGrid.style.cssText='display:grid;grid-template-columns:1fr .8fr;gap:14px;align-items:start;';
-
   const leftCol = document.createElement('div');
   const rightCol = document.createElement('div');
 
-  const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';  // 너의 깃헙 Pages 주소 + 폴더
-
+  const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';
   const ASSET_VERSION = await (async () => {
-    try {
-      const r = await fetch(ASSET_BASE + 'version.txt?ts=' + Date.now(), { cache: 'no-store' });
-      if (r.ok) return (await r.text()).trim();
-    } catch (e) {}
-    // 실패 시: "오늘 날짜"로라도 변경 → 최소 하루마다 새로고침
+    try { const r = await fetch(ASSET_BASE + 'version.txt?ts=' + Date.now(), { cache: 'no-store' }); if (r.ok) return (await r.text()).trim(); } catch (e) {}
     return new Date().toISOString().slice(0,10);
   })();
-  
-   // 파일명 → 완성 URL
-  const v = (f) => `${ASSET_BASE}${f}?v=${encodeURIComponent(ASSET_VERSION)}`; 
-  
+  const v = (f) => `${ASSET_BASE}${f}?v=${encodeURIComponent(ASSET_VERSION)}`;
+
   const CUSTOM_ICON_FILES = {
-    '레벨 상승치': 'week_ico01.png',
-    '피로도 사용량': 'week_ico02.png',
-    '115Lv 에픽': 'week_ico04.png',
-    '심연 : 종말의 숭배자': 'week_ico18.png',
-    '종말의 숭배자': 'week_ico18_1.png',
-    '115Lv 태초': 'week_ico19.png',
-    '베누스': 'week_ico20.png',
-    '115Lv 레전더리': 'week_ico21.png',
-    '나벨': 'week_ico22.png',
-    '이내 황혼전': 'week_ico23.png',
+    '레벨 상승치': 'week_ico01.png','피로도 사용량': 'week_ico02.png','115Lv 에픽': 'week_ico04.png','심연 : 종말의 숭배자': 'week_ico18.png',
+    '종말의 숭배자': 'week_ico18_1.png','115Lv 태초': 'week_ico19.png','베누스': 'week_ico20.png','115Lv 레전더리': 'week_ico21.png',
+    '나벨': 'week_ico22.png','이내 황혼전': 'week_ico23.png',
   };
-
-  const CUSTOM_ICONS = Object.fromEntries(
-    Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)])
-  );
-
+  const CUSTOM_ICONS = Object.fromEntries(Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)]));
   const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
-  const ICONS = {
-    "레벨 상승치": "week_ico01.png",
-    "피로도 사용량": "week_ico02.png",
-    "115Lv 태초": "week_ico19.png",
-    "115Lv 에픽": "week_ico04.png",
-    "115Lv 레전더리": "week_ico21.png",
-    "심연 : 종말의 숭배자": "week_ico18.png",
-    "종말의 숭배자": "week_ico18.png",
-    "나벨": "week_ico22.png",
-    "베누스": "week_ico20.png",
-    "이내 황혼전": "week_ico23.png"
-  };
+  const ICONS = {"레벨 상승치":"week_ico01.png","피로도 사용량":"week_ico02.png","115Lv 태초":"week_ico19.png","115Lv 에픽":"week_ico04.png","115Lv 레전더리":"week_ico21.png","심연 : 종말의 숭배자":"week_ico18.png","종말의 숭배자":"week_ico18.png","나벨":"week_ico22.png","베누스":"week_ico20.png","이내 황혼전":"week_ico23.png"};
+  const resolveIcon = (k) => CUSTOM_ICONS[k] || (ICON_BASE + (ICONS[k] || 'week_ico04.png'));
 
-  const resolveIcon = (k) => {
-    if (CUSTOM_ICONS[k]) return CUSTOM_ICONS[k];
-    if (ICONS[k]) return ICON_BASE + ICONS[k];
-    return ICON_BASE + 'week_ico04.png';
-  };
-  // --- 교체 끝 ---
-
-  function resizeCanvasToContainer(canvas, container, cssHeight = 200) {
-    const dpr = window.devicePixelRatio || 1; // 디스플레이 배율
-    const cssWidth = Math.floor(container.clientWidth); // 컨테이너의 실제 너비
-  
-    // CSS 크기 설정
-    canvas.style.width = cssWidth + 'px';
-    canvas.style.height = cssHeight + 'px';
-  
-    // 실제 비트맵 크기 설정
-    canvas.width = Math.floor(cssWidth * dpr);
-    canvas.height = Math.floor(cssHeight * dpr);
-  
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 배율 보정
-  
-    return { ctx, cssWidth, cssHeight, dpr };
-  }
-
-
-  
   function stripeGrad(k){
     if (k==='레벨 상승치' || k==='피로도 사용량') return 'linear-gradient(180deg,#9bd1ff,#5fa8ff)';
     if (k==='115Lv 태초') return 'linear-gradient(180deg,#8be6c0,#6fb6ff)';
@@ -185,56 +138,29 @@
     if (k==='나벨') return 'linear-gradient(180deg,#6fb6ff,#a58bff)';
     if (k==='베누스') return 'linear-gradient(180deg,#a58bff,#7c66d6)';
     if (k==='이내 황혼전') return 'linear-gradient(180deg,#ffffff,#0d1228)';
-    return 'linear-gradient(180deg,#8be6c0,#93c5fd)';  }
+    return 'linear-gradient(180deg,#8be6c0,#93c5fd)';
+  }
 
   function makeCard(k){
     const wrap = document.createElement('div');
     wrap.style.cssText = `
-      position:relative;
-      background: linear-gradient(180deg,rgb(13, 32, 56) 0%,rgb(51, 70, 105) 100%);
-      border:1px solid rgb(20, 20, 46);
-      border-radius:14px;
-      box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
-      display:flex; gap:10px; align-items:center; padding:10px;
-    `;
-
+      position:relative;background: linear-gradient(180deg,rgb(13,32,56) 0%,rgb(51,70,105) 100%);
+      border:1px solid rgb(20,20,46);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+      display:flex; gap:10px; align-items:center; padding:10px;`;
     const stripe = document.createElement('div');
     stripe.style.cssText = `width:5px; align-self:stretch; border-radius:8px; background:${stripeGrad(k)};`;
-
     const iconBadge = document.createElement('div');
-    iconBadge.style.cssText = `
-      flex:0 0 52px; height:52px; border-radius:12px;
-      background:rgba(0, 0, 0, 0.5);
-      border:1px solid rgba(197,205,252,.6);
-      display:flex; align-items:center; justify-content:center;
-      box-shadow:0 2px 10px rgba(0, 0, 0, 0), inset 0 0 10px rgba(0,0,0,.03);
-      backdrop-filter: blur(2px) saturate(120%);
-    `;
-    const img = document.createElement('img');
-    img.src = resolveIcon(k);
-    img.alt = k;
-    img.crossOrigin = 'anonymous';
-    img.style.cssText = 'width:36px; height:36px; display:block;';
+    iconBadge.style.cssText = `flex:0 0 52px; height:52px; border-radius:12px;background:rgba(0,0,0,.5);border:1px solid rgba(197,205,252,.6);
+      display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(0,0,0,0), inset 0 0 10px rgba(0,0,0,.03); backdrop-filter: blur(2px) saturate(120%);`;
+    const img = document.createElement('img'); img.src = resolveIcon(k); img.alt = k; img.crossOrigin='anonymous'; img.style.cssText='width:36px;height:36px;display:block;';
     iconBadge.appendChild(img);
-
-    const body = document.createElement('div');
-    body.style.cssText = 'display:flex; flex-direction:column; gap:3px; min-width:0;';
-
-    const title = document.createElement('div');
-    title.textContent = (k==='심연 : 종말의 숭배자') ? '심숭이' : k;
-    title.style.cssText = "font-size:13px; letter-spacing:.2px; color:#ffffff; font-weight:400; font-family:'DNFBitBitv2',sans-serif;";
-
-    const value = document.createElement('div');
-    value.textContent = Number(summary[k] || 0).toLocaleString();
-    value.style.cssText = 'font-size:20px; font-weight:800; letter-spacing:.2px; color:#ffffff;';
-
-    wrap.appendChild(stripe);
-    wrap.appendChild(iconBadge);
-    wrap.appendChild(body);
-    body.appendChild(title);
-    body.appendChild(value);
-    return wrap;  }
-
+    const body = document.createElement('div'); body.style.cssText='display:flex;flex-direction:column;gap:3px;min-width:0;';
+    const title = document.createElement('div'); title.textContent = (k==='심연 : 종말의 숭배자') ? '심숭이' : k;
+    title.style.cssText="font-size:13px;letter-spacing:.2px;color:#fff;font-weight:400;font-family:'DNFBitBitv2',sans-serif;";
+    const value = document.createElement('div'); value.textContent = Number(summary[k] || 0).toLocaleString(); value.style.cssText='font-size:20px;font-weight:800;letter-spacing:.2px;color:#fff;';
+    wrap.appendChild(stripe); wrap.appendChild(iconBadge); body.appendChild(title); body.appendChild(value); wrap.appendChild(body);
+    return wrap;
+  }
 
   const rows = [
     ['레벨 상승치','피로도 사용량'],
@@ -250,6 +176,7 @@
     leftCol.appendChild(row);
   });
 
+  // ===== 캘린더 =====
   const calCard = document.createElement('div');
   calCard.style.cssText='background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);';
   const calTitle = document.createElement('div');
@@ -258,7 +185,7 @@
   calCard.appendChild(calTitle);
 
   const byMonth = new Map();
-  const sortedWeeks = weeks.sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
+  const sortedWeeks = weeks.slice().sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 })); // ★ slice()로 원본 보호
   sortedWeeks.forEach(w=>{ const m=w.start.getMonth()+1; if(!byMonth.has(m)) byMonth.set(m,[]); byMonth.get(m).push(w); });
 
   const monthGrid = document.createElement('div');
@@ -272,18 +199,14 @@
     titleM.textContent = `${m}월`;
     titleM.style.cssText="font-family:'DNFBitBitv2',sans-serif;font-weight:800;margin-bottom:6px;color:#cdd3ff;font-size:12px;";
     box.appendChild(titleM);
+
     const data = (byMonth.get(m) || []).sort((a,b)=>a.start-b.start);
     const maxCols = 5;
     const padded = Array.from({length:maxCols}, (_,i)=> data[i] || null);
 
     const header = document.createElement('div');
     header.style.cssText="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:10px;color:#8c93b3;margin-bottom:2px;font-family:'DNFBitBitv2',sans-serif;";
-    padded.forEach(w=>{
-      const cell = document.createElement('div');
-      cell.textContent = w ? `${w.idx}` : '';
-      cell.style.cssText='text-align:center;';
-      header.appendChild(cell);
-    });
+    padded.forEach(w=>{ const cell=document.createElement('div'); cell.textContent=w?`${w.idx}`:''; cell.style.cssText='text-align:center;'; header.appendChild(cell); });
     box.appendChild(header);
 
     const line = document.createElement('div');
@@ -291,18 +214,12 @@
     padded.forEach(w=>{
       const v = w?.taecho ?? null;
       const c = document.createElement('div');
-      if (v===null) {
-        c.textContent = '';
-        c.title = '주 데이터 없음';
+      if (v===null) { c.textContent=''; c.title='주 데이터 없음';
         c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #384065;background: repeating-linear-gradient(45deg,#131833,#131833 6px,#1a2044 6px,#1a2044 12px);color:#8792c2;font-size:10px;`;
-      } else if (v===0) {
-        c.textContent = '0';
-        c.title = `W${w.idx} ${mmdd(w.start)} · 태초 0개`;
+      } else if (v===0) { c.textContent='0'; c.title=`W${w.idx} ${mmdd(w.start)} · 태초 0개`;
         c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #2a2e46;background:#161a2e;color:#0a0a0a;font-weight:700;font-size:10px;`;
-      } else {
-        c.textContent = String(v);
-        c.title = `W${w.idx} ${mmdd(w.start)} · 태초 ${v}개`;
-        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #b8c7ff;background:linear-gradient(135deg,#8be6c0,#6fb6ff);color:#000000;font-weight:700;box-shadow: inset 0 0 14px rgba(255,255,255,.12);font-size:10px;`;
+      } else { c.textContent=String(v); c.title=`W${w.idx} ${mmdd(w.start)} · 태초 ${v}개`;
+        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #b8c7ff;background:linear-gradient(135deg,#8be6c0,#6fb6ff);color:#000; font-weight:700;box-shadow: inset 0 0 14px rgba(255,255,255,.12);font-size:10px;`;
       }
       line.appendChild(c);
     });
@@ -310,18 +227,11 @@
 
     const dates = document.createElement('div');
     dates.style.cssText="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:9px;color:#7db0ff;font-family:'DNFBitBitv2',sans-serif;";
-    padded.forEach(w=>{
-      const d = document.createElement('div');
-      d.textContent = w ? mmdd(w.start) : '';
-      d.style.cssText='text-align:center;';
-      dates.appendChild(d);
-    });
+    padded.forEach(w=>{ const d=document.createElement('div'); d.textContent=w?mmdd(w.start):''; d.style.cssText='text-align:center;'; dates.appendChild(d); });
     box.appendChild(dates);
-
     monthGrid.appendChild(box);
   }
   calCard.appendChild(monthGrid);
-
   rightCol.appendChild(calCard);
 
   const bottomInfoWrap = document.createElement('div');
@@ -334,38 +244,31 @@
   const creator = document.createElement('div');
   creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
   const iconUrl = 'https://ddunin605.github.io/DNF/ddunin.png' + `?v=${encodeURIComponent(ASSET_VERSION)}`;
-  function mkIcon(){ const i=new Image(); i.src=iconUrl; i.crossOrigin = 'anonymous'; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
-  const makerText = document.createElement('span');
-  makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
+  function mkIcon(){ const i=new Image(); i.src=iconUrl; i.crossOrigin='anonymous'; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
+  const makerText = document.createElement('span'); makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
   makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
   creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
   bottomInfoWrap.appendChild(creator);
 
-  
+  // ===== 차트 카드(짤림/루프 방지 설정) =====
   const wideChart = document.createElement('div');
-  wideChart.style.cssText = 'position:relative;background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:12px;margin:14px 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);overflow:hidden;';
-  
+  wideChart.style.cssText = [
+    'position:relative','background:linear-gradient(180deg,#121733,#0d1228)','border:1px solid #2a2e46','border-radius:14px',
+    'padding:12px','margin:14px 0 10px','box-shadow:0 6px 18px rgba(0,0,0,.35)','display:block','overflow:visible','z-index:2'
+  ].join(';');
+
   const chartTitle = document.createElement('div');
   chartTitle.textContent = '📈 주간 태초 분포';
   chartTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
-  
-  // ⬇️ 차트 전용 래퍼(여기에만 높이 고정)
+
   const chartBox = document.createElement('div');
   chartBox.style.cssText = [
-    'position:relative',
-    'width:100%',
-    'height:240px',
-    'min-height:240px',
-    'max-height:240px',
-    'overflow:hidden',
-    // ⬇️ 레이아웃 격리(ResizeObserver 루프 차단)
-    'contain: layout paint size',
-    'isolation:isolate'
-  ].join(';') + ';';
-  
+    'display:block','position:relative','width:100%','height:240px','min-height:240px','max-height:240px',
+    'box-sizing:content-box','overflow:visible'
+  ].join(';');
+
   const chartCanvas = document.createElement('canvas');
-  // 퍼센트 높이 금지
-  chartCanvas.style.cssText = 'display:block;width:100%;height:auto;';
+  chartCanvas.style.cssText = 'display:block;width:100%;height:240px;'; // ★ CSS 높이 고정
 
   chartBox.appendChild(chartCanvas);
   wideChart.appendChild(chartTitle);
@@ -379,94 +282,61 @@
   container.appendChild(bottomInfoWrap);
   document.body.prepend(container);
 
-    // === html-to-image 로더 ===
-// --- (1) 차트 생성 함수: 고정 사이즈로 1회만 렌더 ---
-function mountChartFixed(canvas, labels, data) {
-  // 이미 마운트됐다면 또 만들지 않음 (무한 루프 방지)
-  if (canvas.__mounted__) return canvas.__chart__;
-  canvas.__mounted__ = true;
+  // ===== Chart.js 로딩 & 1회 렌더 =====
+  function mountChartFixed(canvas, labels, data) {
+    if (canvas.__mounted__) return canvas.__chart__;
+    canvas.__mounted__ = true;
 
-  // chartBox 영역의 픽셀 크기 측정
-  const rect = chartBox.getBoundingClientRect();
-  const dpr  = window.devicePixelRatio || 1;
+    let rect = chartBox.getBoundingClientRect();
+    if (!rect.width || !rect.height) { chartBox.style.height = '240px'; rect = chartBox.getBoundingClientRect(); }
+    let w = Math.max(1, Math.round(rect.width));
+    let h = Math.max(240, Math.round(rect.height));
+    const dpr = window.devicePixelRatio || 1;
 
-  // CSS 크기 고정
-  canvas.style.width  = rect.width  + 'px';
-  canvas.style.height = rect.height + 'px';
+    canvas.style.width  = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width  = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
 
-  // 실제 비트맵 크기 고정
-  canvas.width  = Math.round(rect.width  * dpr);
-  canvas.height = Math.round(rect.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: '',
-        data,
-        borderWidth: 2,
-        tension: .3,
-        pointRadius: 1.8,
-        borderColor: 'rgba(255,215,0,1)',
-        backgroundColor: 'rgba(255,215,0,.12)'
-      }]
-    },
-    options: {
-      responsive: false,          // ✅ 반응형 완전 OFF
-      maintainAspectRatio: false, // ✅ 캔버스 크기 그대로
-      animation: false,
-      plugins: {
-        legend:  { display:false },
-        tooltip: { intersect:false, mode:'index' }
-      },
-      scales: {
-        x: {
-          ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true, maxTicksLimit: 12 },
-          grid:{ color:'rgba(42,46,70,.55)'}
-        },
-        y: {
-          ticks:{ color:'#b9c0ff' },
-          grid:{ color:'rgba(42,46,70,.55)'},
-          beginAtZero:true
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ label:'', data, borderWidth:2, tension:.3, pointRadius:1.8,
+        borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)'}]},
+      options: {
+        responsive:false, maintainAspectRatio:false, animation:false,
+        plugins:{ legend:{display:false}, tooltip:{intersect:false, mode:'index'} },
+        scales:{
+          x:{ ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true, maxTicksLimit:12 }, grid:{ color:'rgba(42,46,70,.55)'} },
+          y:{ ticks:{ color:'#b9c0ff' }, grid:{ color:'rgba(42,46,70,.55)'}, beginAtZero:true }
         }
       }
-    }
-  });
+    });
+    canvas.__chart__ = chart;
+    console.log('[chart] mounted', { w, h, dpr, points:data.length });
+    return chart;
+  }
 
-  canvas.__chart__ = chart;
-  return chart;
-}
+  async function ensureChartJs(){
+    if (window.Chart) return;
+    await new Promise((res, rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/chart.js';
+      s.onload=res; s.onerror=rej; document.head.appendChild(s);
+    });
+  }
 
-// --- (2) Chart.js 로더: 한 번만 로드 ---
-async function ensureChartJs() {
-  if (window.Chart) return;        // 이미 로드됨
-  await new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src   = 'https://cdn.jsdelivr.net/npm/chart.js';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
+  (async () => {
+    await ensureChartJs();
+    await new Promise(requestAnimationFrame); // 한 프레임 대기
+    const seq = weeks.slice().sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
+    const labels = seq.map(w => `W${w.idx}`);
+    const data = seq.map(w => w.taecho || 0);
+    const canvas = chartBox.querySelector('canvas');
+    if (!canvas) { console.error('[chart] canvas not found'); return; }
+    mountChartFixed(canvas, labels, data);
+  })();
 
-// --- (3) 데이터 준비 후 1회 마운트 ---
-(async () => {
-  await ensureChartJs();
-
-  const seq = weeks.slice().sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
-  const labels = seq.map(w => `W${w.idx}`);
-  const data   = seq.map(w => w.taecho || 0);
-
-  const canvas = chartBox.querySelector('canvas');
-
-  // 레이아웃 격리(추가 안전장치)
-  wideChart.style.cssText += ';contain:layout paint size;isolation:isolate;';
-
-  mountChartFixed(canvas, labels, data); // ✅ 딱 1번만 렌더
-})();
-
-})();
+})(); 
