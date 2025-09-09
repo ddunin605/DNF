@@ -4,6 +4,7 @@
   const NOW = new Date();
   const fmtYMD = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const delay = ms => new Promise(res => setTimeout(res, ms));
+
   async function clickAllMoreButtons() {
     const maxClicks = 100;
     const deadline = Date.now() + 30000;
@@ -98,25 +99,21 @@
   topBrand.appendChild(brandLeft); topBrand.appendChild(brandRight);
 
   const mainGrid = document.createElement('div');
-  mainGrid.style.cssText='display:grid;grid-template-columns:1fr .8fr;gap:14px;align-items:start;';
+  mainGrid.style.cssText='display:grid;grid-template-columns:1.9fr .1fr;gap:14px;align-items:start;';
 
   const leftCol = document.createElement('div');
   const rightCol = document.createElement('div');
 
-  const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';  // 너의 깃헙 Pages 주소 + 폴더
-
+  const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';
   const ASSET_VERSION = await (async () => {
     try {
       const r = await fetch(ASSET_BASE + 'version.txt?ts=' + Date.now(), { cache: 'no-store' });
       if (r.ok) return (await r.text()).trim();
     } catch (e) {}
-    // 실패 시: "오늘 날짜"로라도 변경 → 최소 하루마다 새로고침
     return new Date().toISOString().slice(0,10);
   })();
-  
-   // 파일명 → 완성 URL
-  const v = (f) => `${ASSET_BASE}${f}?v=${encodeURIComponent(ASSET_VERSION)}`; 
-  
+  const v = (f) => `${ASSET_BASE}${f}?v=${encodeURIComponent(ASSET_VERSION)}`;
+
   const CUSTOM_ICON_FILES = {
     '레벨 상승치': 'week_ico01.png',
     '피로도 사용량': 'week_ico02.png',
@@ -129,11 +126,9 @@
     '나벨': 'week_ico22.png',
     '이내 황혼전': 'week_ico23.png',
   };
-
   const CUSTOM_ICONS = Object.fromEntries(
     Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)])
   );
-
   const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
   const ICONS = {
     "레벨 상승치": "week_ico01.png",
@@ -147,14 +142,11 @@
     "베누스": "week_ico20.png",
     "이내 황혼전": "week_ico23.png"
   };
-
   const resolveIcon = (k) => {
     if (CUSTOM_ICONS[k]) return CUSTOM_ICONS[k];
     if (ICONS[k]) return ICON_BASE + ICONS[k];
     return ICON_BASE + 'week_ico04.png';
   };
-  // --- 교체 끝 ---
-
 
   function stripeGrad(k){
     if (k==='레벨 상승치' || k==='피로도 사용량') return 'linear-gradient(180deg,#9bd1ff,#5fa8ff)';
@@ -166,7 +158,8 @@
     if (k==='나벨') return 'linear-gradient(180deg,#6fb6ff,#a58bff)';
     if (k==='베누스') return 'linear-gradient(180deg,#a58bff,#7c66d6)';
     if (k==='이내 황혼전') return 'linear-gradient(180deg,#ffffff,#0d1228)';
-    return 'linear-gradient(180deg,#8be6c0,#93c5fd)';  }
+    return 'linear-gradient(180deg,#8be6c0,#93c5fd)';
+  }
 
   function makeCard(k){
     const wrap = document.createElement('div');
@@ -178,13 +171,12 @@
       box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
       display:flex; gap:10px; align-items:center; padding:10px;
     `;
-
     const stripe = document.createElement('div');
     stripe.style.cssText = `width:5px; align-self:stretch; border-radius:8px; background:${stripeGrad(k)};`;
 
     const iconBadge = document.createElement('div');
     iconBadge.style.cssText = `
-      flex:0 0 52px; height:52px; border-radius:12px;
+      flex:0 0 48px; height:48px; border-radius:12px;
       background:rgba(0, 0, 0, 0.5);
       border:1px solid rgba(197,205,252,.6);
       display:flex; align-items:center; justify-content:center;
@@ -195,27 +187,21 @@
     img.src = resolveIcon(k);
     img.alt = k;
     img.crossOrigin = 'anonymous';
-    img.style.cssText = 'width:36px; height:36px; display:block;';
+    img.style.cssText = 'width:32px; height:32px; display:block;';
     iconBadge.appendChild(img);
 
     const body = document.createElement('div');
     body.style.cssText = 'display:flex; flex-direction:column; gap:3px; min-width:0;';
-
     const title = document.createElement('div');
     title.textContent = (k==='심연 : 종말의 숭배자') ? '심숭이' : k;
     title.style.cssText = "font-size:13px; letter-spacing:.2px; color:#ffffff; font-weight:400; font-family:'DNFBitBitv2',sans-serif;";
-
     const value = document.createElement('div');
     value.textContent = Number(summary[k] || 0).toLocaleString();
     value.style.cssText = 'font-size:20px; font-weight:800; letter-spacing:.2px; color:#ffffff;';
-
-    wrap.appendChild(stripe);
-    wrap.appendChild(iconBadge);
-    wrap.appendChild(body);
-    body.appendChild(title);
-    body.appendChild(value);
-    return wrap;  }
-
+    wrap.appendChild(stripe); wrap.appendChild(iconBadge); wrap.appendChild(body);
+    body.appendChild(title); body.appendChild(value);
+    return wrap;
+  }
 
   const rows = [
     ['레벨 상승치','피로도 사용량'],
@@ -231,12 +217,22 @@
     leftCol.appendChild(row);
   });
 
+  // =========================
+  //  🗓️ 태초 캘린더
+  //    - 가로폭 유지
+  //    - 세로 전체(타이틀+패딩 포함) 327.62px 고정
+  // =========================
   const calCard = document.createElement('div');
-  calCard.style.cssText='background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);';
+  calCard.style.cssText='background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);position:relative;overflow:hidden;';
   const calTitle = document.createElement('div');
   calTitle.textContent = '🗓️ 태초 캘린더';
   calTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
   calCard.appendChild(calTitle);
+
+  // 실제 달력 콘텐츠 래퍼 (스케일 대상)
+  const calInnerWrap = document.createElement('div');
+  calInnerWrap.style.cssText = 'transform-origin: top left;';
+  calCard.appendChild(calInnerWrap);
 
   const byMonth = new Map();
   const sortedWeeks = weeks.sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
@@ -244,64 +240,71 @@
 
   const monthGrid = document.createElement('div');
   monthGrid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:8px;';
+  calInnerWrap.appendChild(monthGrid);
+
   function mmdd(d){ return `${d.getMonth()+1}/${d.getDate()}`; }
+
+  // 컴팩트 기본값 (너무 크게 보이면 살짝 줄임)
+  const BOX_PAD = 8, GAP = 4, RADIUS = 10, CELL_PAD = 6;
+  const FZ_TITLE = 12, FZ_HEADER = 10, FZ_CELL = 10, FZ_DATE = 9;
+  const MAX_COLS = 5;
 
   for (let m=1; m<=12; m++){
     const box = document.createElement('section');
-    box.style.cssText='background:#0c132c;border:1px solid #273055;border-radius:10px;padding:8px;';
+    box.style.cssText=`background:#0c132c;border:1px solid #273055;border-radius:${RADIUS}px;padding:${BOX_PAD}px;`;
+
     const titleM = document.createElement('div');
     titleM.textContent = `${m}월`;
-    titleM.style.cssText="font-family:'DNFBitBitv2',sans-serif;font-weight:800;margin-bottom:6px;color:#cdd3ff;font-size:12px;";
+    titleM.style.cssText=`font-family:'DNFBitBitv2',sans-serif;font-weight:800;margin-bottom:${GAP}px;color:#cdd3ff;font-size:${FZ_TITLE}px;`;
     box.appendChild(titleM);
+
     const data = (byMonth.get(m) || []).sort((a,b)=>a.start-b.start);
-    const maxCols = 5;
-    const padded = Array.from({length:maxCols}, (_,i)=> data[i] || null);
+    const padded = Array.from({length:MAX_COLS}, (_,i)=> data[i] || null);
 
     const header = document.createElement('div');
-    header.style.cssText="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:10px;color:#8c93b3;margin-bottom:2px;font-family:'DNFBitBitv2',sans-serif;";
+    header.style.cssText=`display:grid;grid-template-columns:repeat(${MAX_COLS},1fr);gap:${GAP}px;font-size:${FZ_HEADER}px;color:#8c93b3;margin-bottom:${GAP}px;font-family:'DNFBitBitv2',sans-serif;`;
     padded.forEach(w=>{
       const cell = document.createElement('div');
-      cell.textContent = w ? `${w.idx}` : '';
-      cell.style.cssText='text-align:center;';
+      cell.textContent = w ? `W${w.idx}` : '';
+      cell.style.cssText='text-align:center;line-height:1.1;';
       header.appendChild(cell);
     });
     box.appendChild(header);
 
     const line = document.createElement('div');
-    line.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:2px;';
+    line.style.cssText=`display:grid;grid-template-columns:repeat(${MAX_COLS},1fr);gap:${GAP}px;margin-bottom:${GAP}px;`;
     padded.forEach(w=>{
       const v = w?.taecho ?? null;
       const c = document.createElement('div');
       if (v===null) {
         c.textContent = '';
         c.title = '주 데이터 없음';
-        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #384065;background: repeating-linear-gradient(45deg,#131833,#131833 6px,#1a2044 6px,#1a2044 12px);color:#8792c2;font-size:10px;`;
+        c.style.cssText = `text-align:center;padding:${CELL_PAD}px 0;border-radius:${RADIUS-2}px;border:1px solid #384065;background: repeating-linear-gradient(45deg,#131833,#131833 6px,#1a2044 6px,#1a2044 12px);color:#8792c2;font-size:${FZ_CELL}px;line-height:1.1;`;
       } else if (v===0) {
         c.textContent = '0';
-        c.title = `W${w.idx} ${mmdd(w.start)} · 태초 0개`;
-        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #2a2e46;background:#161a2e;color:#0a0a0a;font-weight:700;font-size:10px;`;
+        c.title = `태초 0개`;
+        c.style.cssText = `text-align:center;padding:${CELL_PAD}px 0;border-radius:${RADIUS-2}px;border:1px solid #2a2e46;background:#161a2e;color:#0a0a0a;font-weight:700;font-size:${FZ_CELL}px;line-height:1.1;`;
       } else {
         c.textContent = String(v);
-        c.title = `W${w.idx} ${mmdd(w.start)} · 태초 ${v}개`;
-        c.style.cssText = `text-align:center;padding:6px 0;border-radius:7px;border:1px solid #b8c7ff;background:linear-gradient(135deg,#8be6c0,#6fb6ff);color:#000000;font-weight:700;box-shadow: inset 0 0 14px rgba(255,255,255,.12);font-size:10px;`;
+        c.title = `태초 ${v}개`;
+        c.style.cssText = `text-align:center;padding:${CELL_PAD}px 0;border-radius:${RADIUS-2}px;border:1px solid #b8c7ff;background:linear-gradient(135deg,#8be6c0,#6fb6ff);color:#000;font-weight:700;box-shadow: inset 0 0 14px rgba(255,255,255,.12);font-size:${FZ_CELL}px;line-height:1.1;`;
       }
       line.appendChild(c);
     });
     box.appendChild(line);
 
     const dates = document.createElement('div');
-    dates.style.cssText="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:9px;color:#7db0ff;font-family:'DNFBitBitv2',sans-serif;";
+    dates.style.cssText=`display:grid;grid-template-columns:repeat(${MAX_COLS},1fr);gap:${GAP}px;font-size:${FZ_DATE}px;color:#7db0ff;font-family:'DNFBitBitv2',sans-serif;`;
     padded.forEach(w=>{
       const d = document.createElement('div');
       d.textContent = w ? mmdd(w.start) : '';
-      d.style.cssText='text-align:center;';
+      d.style.cssText='text-align:center;line-height:1.1;';
       dates.appendChild(d);
     });
     box.appendChild(dates);
 
     monthGrid.appendChild(box);
   }
-  calCard.appendChild(monthGrid);
 
   rightCol.appendChild(calCard);
 
@@ -319,8 +322,8 @@
   const makerText = document.createElement('span');
   makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
   makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
-  creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
   bottomInfoWrap.appendChild(creator);
+  creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
 
   const wideChart = document.createElement('div');
   wideChart.style.cssText = 'position:relative;background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:12px;margin:14px 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);overflow:hidden;';
@@ -340,87 +343,27 @@
   container.appendChild(bottomInfoWrap);
   document.body.prepend(container);
 
-    // === html-to-image 로더 ===
-  async function ensureHtmlToImage(){
-    if (window.htmlToImage) return;
-    await new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js';
-      s.onload = res; s.onerror = rej; document.head.appendChild(s);
-    });
-  }
-  
-  // === 공통 옵션 ===
-  const captureOpts = {
-    cacheBust: true,
-    pixelRatio: 2,
-    backgroundColor: '#0e111d',
-  };
-  
-  // === PNG 저장 ===
-  async function saveSummaryAsPNG(){
-    await ensureHtmlToImage();
-    // 렌더 안정화
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  
-    const node = container; // #df-summary-box
-    const filename = `떠닝_중천_모아보기_${fmtYMD(NOW)}.png`;
-    const dataUrl = await window.htmlToImage.toPng(node, captureOpts);
-    const a = document.createElement('a');
-    a.href = dataUrl; a.download = filename; a.click();
-  }
-  
-  // === PNG를 클립보드로 복사 ===
-  async function copySummaryToClipboard(){
-    await ensureHtmlToImage();
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  
-    const node = container;
-    const blob = await window.htmlToImage.toBlob(node, captureOpts);
-    if (!blob) throw new Error('이미지 생성 실패');
-    if (!navigator.clipboard || !window.ClipboardItem) throw new Error('클립보드 API 미지원');
-  
-    const item = new ClipboardItem({ [blob.type]: blob });
-    await navigator.clipboard.write([item]);
-    // 선택: 사용자 피드백
-    // alert('이미지가 클립보드에 복사되었어요!');
-  }
-  
-  // === 툴바(박스 외부) 만들기 ===
-  // container 위(밖)에 표시
-  const toolbar = document.createElement('div');
-  toolbar.id = 'df-save-toolbar';
-  toolbar.style.cssText = `
-    display:flex; gap:8px; justify-content:flex-end;
-    max-width:1160px; margin:0 auto 10px; padding:0 4px;
-  `;
-  function mkBtn(label, onClick){
-    const b = document.createElement('button');
-    b.textContent = label;
-    b.onclick = onClick;
-    b.style.cssText = `
-      padding:6px 10px;border-radius:999px;
-      background:linear-gradient(180deg,#1b2142,#141a34);
-      border:1px solid #2a2f50;color:#cfe1ff;
-      font-weight:700;font-size:11px;cursor:pointer;
-    `;
-    return b;
-  }
-  toolbar.appendChild(mkBtn('PNG 저장', saveSummaryAsPNG));
-  toolbar.appendChild(mkBtn('클립보드 복사', copySummaryToClipboard));
-  
-  // body 최상단에 container가 이미 들어갔으니, 그 "앞"에 툴바를 삽입
-  document.body.insertBefore(toolbar, container);
+  // ===== PNG/클립보드 기능 전부 제거됨 =====
 
-    // 기존 툴바가 있으면 지우고(중복 방지)
-  document.getElementById('df-save-toolbar')?.remove();
-  
-  // 박스(#df-summary-box) "바로 앞"에 붙이기 — 가장 확실
-  container.before(toolbar);
-  
-  // (참고) 구형 브라우저면 아래도 OK
-  // (container.parentNode || document.body).insertBefore(toolbar, container);
-  
+  // ===== 달력 높이 정확히 327.62px로 맞추기 =====
+  requestAnimationFrame(() => {
+    const TARGET = 327.62;               // 전체 카드 높이(타이틀+패딩 포함)
+    const padTB = 20;                    // calCard padding 10px * 2
+    const titleH = calTitle.getBoundingClientRect().height + 6; // margin-bottom 6
+    const innerH0 = calInnerWrap.getBoundingClientRect().height;
+    const usable = TARGET - padTB - titleH;
+
+    if (innerH0 > 0 && usable > 0) {
+      // 균등 스케일(가로폭은 유지하도록 width 보정)
+      const scale = Math.min(1, usable / innerH0);
+      calInnerWrap.style.transformOrigin = 'top left';
+      calInnerWrap.style.transform = `scale(${scale})`;
+      calInnerWrap.style.width = `${100/scale}%`; // 가로폭 유지
+      calCard.style.height = `${TARGET}px`;
+    }
+  });
+
+  // ===== Chart.js =====
   const script=document.createElement('script');
   script.src='https://cdn.jsdelivr.net/npm/chart.js';
   script.onload = () => {
@@ -460,11 +403,3 @@
   };
   document.head.appendChild(script);
 })();
-
-
-
-
-
-
-
-
