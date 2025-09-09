@@ -351,12 +351,22 @@
   
   // ⬇️ 차트 전용 래퍼(여기에만 높이 고정)
   const chartBox = document.createElement('div');
-  chartBox.style.cssText = 'position:relative;width:100%;height:240px;overflow:hidden;';
+  chartBox.style.cssText = [
+    'position:relative',
+    'width:100%',
+    'height:240px',
+    'min-height:240px',
+    'max-height:240px',
+    'overflow:hidden',
+    // ⬇️ 레이아웃 격리(ResizeObserver 루프 차단)
+    'contain: layout paint size',
+    'isolation:isolate'
+  ].join(';') + ';';
   
   const chartCanvas = document.createElement('canvas');
-  // 절대배치/퍼센트 높이 제거 → 레이아웃 안정
+  // 퍼센트 높이 금지
   chartCanvas.style.cssText = 'display:block;width:100%;height:auto;';
-  
+
   chartBox.appendChild(chartCanvas);
   wideChart.appendChild(chartTitle);
   wideChart.appendChild(chartBox);
@@ -370,188 +380,91 @@
   document.body.prepend(container);
 
     // === html-to-image 로더 ===
-  async function ensureHtmlToImage(){
-    if (window.htmlToImage) return;
-    await new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js';
-      s.onload = res; s.onerror = rej; document.head.appendChild(s);
-    });
-  }
-  
-  // === 공통 옵션 ===
-  const captureOpts = {
-    cacheBust: true,
-    pixelRatio: 2,
-    backgroundColor: '#0e111d',
-  };
-  
-  // === PNG 저장 ===
-  async function saveSummaryAsPNG() {
-    const target = document.getElementById('df-summary-box');
-    if (!target) return alert('요약 박스를 찾지 못했어요.');
-  
-    // 1) 정확한 크기 계산
-    const rect = target.getBoundingClientRect();
-    const W = Math.round(rect.width);
-    const H = Math.round(rect.height);
-  
-    // 2) 툴바/불필요 요소는 제외
-    const shouldKeep = (node) => {
-      if (!node || node.nodeType !== 1) return true;
-      const id = node.id || '';
-      if (id === 'df-save-toolbar') return false;    // 툴바 제외
-      return true;
-    };
-  
-    // 3) 고해상도 & 배경 지정해서만 캡처
-    const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2));
-    const dataUrl = await htmlToImage.toPng(target, {
-      width: W,
-      height: H,
-      pixelRatio: scale,
-      skipAutoScale: true,
-      backgroundColor: '#0E111D', // 네 디자인 배경색
-      filter: shouldKeep,
-      style: {
-        margin: '0',              // margin 영향 제거
-        transform: 'none',        // transform 영향 제거
-        boxShadow: 'none',        // 그림자 경계에서 투명픽셀 줄이기
+// --- (1) 차트 생성 함수: 고정 사이즈로 1회만 렌더 ---
+function mountChartFixed(canvas, labels, data) {
+  // 이미 마운트됐다면 또 만들지 않음 (무한 루프 방지)
+  if (canvas.__mounted__) return canvas.__chart__;
+  canvas.__mounted__ = true;
+
+  // chartBox 영역의 픽셀 크기 측정
+  const rect = chartBox.getBoundingClientRect();
+  const dpr  = window.devicePixelRatio || 1;
+
+  // CSS 크기 고정
+  canvas.style.width  = rect.width  + 'px';
+  canvas.style.height = rect.height + 'px';
+
+  // 실제 비트맵 크기 고정
+  canvas.width  = Math.round(rect.width  * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '',
+        data,
+        borderWidth: 2,
+        tension: .3,
+        pointRadius: 1.8,
+        borderColor: 'rgba(255,215,0,1)',
+        backgroundColor: 'rgba(255,215,0,.12)'
+      }]
+    },
+    options: {
+      responsive: false,          // ✅ 반응형 완전 OFF
+      maintainAspectRatio: false, // ✅ 캔버스 크기 그대로
+      animation: false,
+      plugins: {
+        legend:  { display:false },
+        tooltip: { intersect:false, mode:'index' }
       },
-    });
-  
-    // 4) 다운로드
-    const a = document.createElement('a');
-    const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-    a.href = dataUrl;
-    a.download = `떠닝_중천_모아보기_${ts}.png`;
-    a.click();
-  }
-  // === PNG를 클립보드로 복사 ===
-  async function copySummaryToClipboard() {
-    const target = document.getElementById('df-summary-box');
-    if (!target) return alert('요약 박스를 찾지 못했어요.');
-  
-    const rect = target.getBoundingClientRect();
-    const W = Math.round(rect.width);
-    const H = Math.round(rect.height);
-    const scale = Math.max(2, Math.min(3, window.devicePixelRatio || 2));
-  
-    const blob = await htmlToImage.toBlob(target, {
-      width: W,
-      height: H,
-      pixelRatio: scale,
-      skipAutoScale: true,
-      backgroundColor: '#0E111D',
-      filter: (node) => (node.id !== 'df-save-toolbar'),
-      style: { margin: '0', transform: 'none', boxShadow: 'none' },
-    });
-    await navigator.clipboard.write([
-      new ClipboardItem({ [blob.type]: blob })
-    ]);
-    // (선택) 토스트 알림
-    // showToast('복사 완료!');
-  }
-
-  // 1) 기존 툴바가 있으면 먼저 제거 (중복/깜빡임 방지)
-  document.getElementById('df-save-toolbar')?.remove();
-  
-  // 2) 새 툴바 생성
-  const toolbar = document.createElement('div');
-  toolbar.id = 'df-save-toolbar';
-  toolbar.style.cssText = `
-    display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;
-    max-width:1160px; margin:0 auto 10px; padding:0 4px;
-    box-sizing:border-box;
-  `;
-  
-  // 3) 버튼 팩토리
-  function mkBtn(label, onClick){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = label;
-    b.onclick = onClick;
-    b.style.cssText = `
-      padding:8px 14px; border-radius:999px;
-      background:linear-gradient(180deg,#1b2142,#141a34);
-      border:1px solid #2a2f50; color:#cfe1ff;
-      font-weight:700; font-size:12px; cursor:pointer;
-      line-height:1; user-select:none; outline:none;
-      box-shadow:0 1px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.04);
-      transition:transform .06s ease, box-shadow .12s ease, filter .12s ease;
-    `;
-    b.onmouseenter = () => { b.style.filter = 'brightness(1.06)'; };
-    b.onmouseleave = () => { b.style.filter = 'none'; };
-    b.onmousedown  = () => { b.style.transform = 'translateY(1px)'; };
-    b.onmouseup    = () => { b.style.transform = 'translateY(0)'; };
-    return b;
-  }
-  
-  // 4) 버튼 부착
-  toolbar.appendChild(mkBtn('PNG 저장', saveSummaryAsPNG));
-  toolbar.appendChild(mkBtn('클립보드 복사', copySummaryToClipboard));
-  
-  // 5) 박스(#df-summary-box) "바로 앞"에 1회만 삽입
-  container.before(toolbar);
-  
-  // (참고) 구형 브라우저면 아래도 OK
-  // (container.parentNode || document.body).insertBefore(toolbar, container);
-  
-  const script=document.createElement('script');
-  script.src='https://cdn.jsdelivr.net/npm/chart.js';
-  script.onload = () => {
-    const seq = weeks.sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
-    const labels = seq.map((w)=> `W${w.idx}`);
-    const data = seq.map(w => w.taecho || 0);
-    
-    function mountChartFixed() {
-      const canvas = chartBox.querySelector('canvas');
-      const rect = chartBox.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-    
-      // ✅ 한 번만 정확한 크기로 고정
-      canvas.style.width  = rect.width  + 'px';   // CSS 픽셀
-      canvas.style.height = rect.height + 'px';   // CSS 픽셀
-      canvas.width  = Math.round(rect.width  * dpr); // 실제 비트맵
-      canvas.height = Math.round(rect.height * dpr);
-    
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 고해상도 보정
-    
-      return new Chart(ctx, {
-        type: 'line',
-        data: { labels, datasets: [{ label:'', data, borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)', tension:.3, pointRadius:1.8, borderWidth:2 }]},
-        options: {
-          responsive: false,            // ⬅️ 반응형 완전 OFF (루프 원천 차단)
-          maintainAspectRatio: false,   // 안전하게 유지
-          animation: false,             // (선택) 초기 애니도 제거
-          plugins: { legend:{ display:false }, tooltip:{ intersect:false, mode:'index' } },
-          scales: {
-            x: { ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true }, grid:{ color:'rgba(42,46,70,.55)'} },
-            y: { ticks:{ color:'#b9c0ff' }, grid:{ color:'rgba(42,46,70,.55)'}, beginAtZero:true }
-          }
+      scales: {
+        x: {
+          ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true, maxTicksLimit: 12 },
+          grid:{ color:'rgba(42,46,70,.55)'}
+        },
+        y: {
+          ticks:{ color:'#b9c0ff' },
+          grid:{ color:'rgba(42,46,70,.55)'},
+          beginAtZero:true
         }
-      });
+      }
     }
-    let chart = mountChartFixed();
+  });
 
+  canvas.__chart__ = chart;
+  return chart;
+}
 
-    
-    // 첫 페인트 후 한 번만 수동 리사이즈
+// --- (2) Chart.js 로더: 한 번만 로드 ---
+async function ensureChartJs() {
+  if (window.Chart) return;        // 이미 로드됨
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src   = 'https://cdn.jsdelivr.net/npm/chart.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// --- (3) 데이터 준비 후 1회 마운트 ---
+(async () => {
+  await ensureChartJs();
+
+  const seq = weeks.slice().sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
+  const labels = seq.map(w => `W${w.idx}`);
+  const data   = seq.map(w => w.taecho || 0);
+
+  const canvas = chartBox.querySelector('canvas');
+
+  // 레이아웃 격리(추가 안전장치)
+  wideChart.style.cssText += ';contain:layout paint size;isolation:isolate;';
+
+  mountChartFixed(canvas, labels, data); // ✅ 딱 1번만 렌더
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
