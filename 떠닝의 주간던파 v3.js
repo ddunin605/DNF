@@ -169,14 +169,14 @@
       border:1px solid rgb(20, 20, 46);
       border-radius:14px;
       box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
-      display:flex; gap:10px; align-items:center; padding:10px;
+      display:flex; gap:8px; align-items:center; padding:10px;
     `;
     const stripe = document.createElement('div');
-    stripe.style.cssText = `width:5px; align-self:stretch; border-radius:8px; background:${stripeGrad(k)};`;
+    stripe.style.cssText = `width:4px; align-self:stretch; border-radius:8px; background:${stripeGrad(k)};`;
 
     const iconBadge = document.createElement('div');
     iconBadge.style.cssText = `
-      flex:0 0 48px; height:48px; border-radius:12px;
+      flex:0 0 44px; height:44px; border-radius:12px;
       background:rgba(0, 0, 0, 0.5);
       border:1px solid rgba(197,205,252,.6);
       display:flex; align-items:center; justify-content:center;
@@ -187,14 +187,14 @@
     img.src = resolveIcon(k);
     img.alt = k;
     img.crossOrigin = 'anonymous';
-    img.style.cssText = 'width:32px; height:32px; display:block;';
+    img.style.cssText = 'width:28px; height:28px; display:block;';
     iconBadge.appendChild(img);
 
     const body = document.createElement('div');
     body.style.cssText = 'display:flex; flex-direction:column; gap:3px; min-width:0;';
     const title = document.createElement('div');
     title.textContent = (k==='심연 : 종말의 숭배자') ? '심숭이' : k;
-    title.style.cssText = "font-size:13px; letter-spacing:.2px; color:#ffffff; font-weight:400; font-family:'DNFBitBitv2',sans-serif;";
+    title.style.cssText = "font-size:12.5px; letter-spacing:.2px; color:#ffffff; font-weight:400; line-height:1.2; white-space:normal; overflow-wrap:anywhere; word-break:keep-all; font-family:'DNFBitBitv2',sans-serif;";
     const value = document.createElement('div');
     value.textContent = Number(summary[k] || 0).toLocaleString();
     value.style.cssText = 'font-size:20px; font-weight:800; letter-spacing:.2px; color:#ffffff;';
