@@ -1,7 +1,8 @@
+<script>
 (() => {
   // ==== CONFIG / HELPERS =====================================================
   const ROOT = document.querySelector('#search_result .sr-result');
-  if (!ROOT) { alert('검색 결과(.sr-result)를 찾을 수 없어요! 페이지에서 검색 결과가 보이는지 확인해주세요.'); return; }
+  if (!ROOT) { alert('검색 결과(.sr-result)를 찾을 수 없어요. 페이지에서 검색 결과가 보이는지 확인해주세요.'); return; }
 
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
@@ -43,6 +44,19 @@
     '통계'  : '.seh_stat'
   };
 
+  // 명성 프리셋 (이름: 최소 명성)
+  const FAME_PRESETS = {
+    '안개신': 30135,
+    '호수': 34749,
+    '베누스': 41929,
+    '애쥬어': 44929,
+    '나벨': 47684,
+    '여신전': 48988,
+    '10티어': 61296,
+    '이내': 72688,
+  };
+  const PRESET_KEYS = Object.keys(FAME_PRESETS);
+
   // ==== UI BUILD =============================================================
   const PANEL_ID = 'ddunin-filter-panel';
   if (document.getElementById(PANEL_ID)) document.getElementById(PANEL_ID).remove();
@@ -77,13 +91,19 @@
     #${PANEL_ID} .small { font-size: 12px; opacity:.8; margin-top:6px; }
     #${PANEL_ID} .muted { opacity:.75; }
 
-    /* 카드 컴팩트 모드 (섹션을 많이 숨기면 자동 적용) */
+    /* 카드 컴팩트 모드 */
     .scon.ddunin-compact { padding: 8px 10px !important; }
     .scon.ddunin-compact .seh_abata .imgt img { max-height: 72px; }
     .scon.ddunin-compact .seh_addinfo, 
     .scon.ddunin-compact .seh_stat { margin-top: 4px !important; }
   `;
   document.head.appendChild(style);
+
+  const famePresetChipsHTML = PRESET_KEYS.map(k => {
+    const v = FAME_PRESETS[k];
+    const t = `${k}: ${v.toLocaleString()} 이상`;
+    return `<label class="chip" title="${t}"><input type="checkbox" data-fp="${k}"> ${k}</label>`;
+  }).join('');
 
   const panel = document.createElement('div');
   panel.id = PANEL_ID;
@@ -117,6 +137,8 @@
       <label>명성</label>
       <input id="fp-fameexpr" type="text" placeholder="예: >50000 <60000 또는 50000-60000">
       <div class="small">지원: <code>&gt;N</code>, <code>&gt;=N</code>, <code>&lt;N</code>, <code>&lt;=N</code>, <code>N-M</code>, 숫자 한 개(최소값)</div>
+      <div class="small muted" style="margin-top:4px;">아래 프리셋을 체크하면 <b>최소 명성(>=)</b>이 빠르게 지정됩니다. 여러 개 선택 시 가장 낮은 값으로 합쳐 적용됩니다.</div>
+      <div class="row" id="fp-famepresets">${famePresetChipsHTML}</div>
     </div>
 
     <div class="sec">
@@ -151,7 +173,7 @@
   document.body.appendChild(panel);
 
   // ==== STATE / PERSIST ======================================================
-  const SS_KEY = 'ddunin_filter_panel_state_v2'; // ← v2로 bump
+  const SS_KEY = 'ddunin_filter_panel_state_v2_1'; // 버전 bump (프리셋 추가)
   const loadState = () => {
     try { return JSON.parse(sessionStorage.getItem(SS_KEY) || '{}'); } catch { return {}; }
   };
@@ -163,6 +185,7 @@
     job: '',
     role: '',
     fameExpr: '',
+    famePresets: [],            // ← 선택된 프리셋 키들의 배열 (['안개신','나벨',...])
     blocks: Object.keys(blockMap).reduce((m,k)=> (m[k]=true,m), {}),
     sort: 'dom'
   }, loadState());
@@ -173,9 +196,13 @@
   // 역할 라디오
   const roleInput = $(`#fp-role input[name="role"][value="${state.role||''}"]`) || $(`#fp-role input[name="role"][value=""]`);
   if (roleInput) roleInput.checked = true;
-
+  // 블록 체크
   $$('#fp-blocks input').forEach(ch => {
     ch.checked = state.blocks[ch.dataset.block] !== false;
+  });
+  // 프리셋 체크
+  $$('#fp-famepresets input[type="checkbox"]').forEach(ch => {
+    ch.checked = state.famePresets.includes(ch.dataset.fp);
   });
 
   // original order memory
@@ -203,8 +230,37 @@
     return {min:null, max:null, ops};
   };
 
-  const famePass = (fame, exprObj) => {
-    const {min, max, ops} = exprObj;
+  // 프리셋으로부터 최소 임계치 계산 (여러 개면 최솟값)
+  const calcPresetMin = () => {
+    const vals = (state.famePresets||[])
+      .map(k => FAME_PRESETS[k])
+      .filter(v => typeof v === 'number' && !isNaN(v));
+    if (!vals.length) return null;
+    return Math.min(...vals);
+  };
+
+  // exprObj와 프리셋을 합쳐 최종 조건 생성
+  const mergeFameConstraints = (exprObj) => {
+    const out = {min: exprObj.min, max: exprObj.max, ops: [...exprObj.ops]};
+
+    // ops 안의 >= 조건들을 min으로 흡수 (논리 AND)
+    const geVals = exprObj.ops.filter(o=>o.op==='<=' || o.op==='>=' || o.op==='>' || o.op==='<'); // 그대로 유지
+    // 다만 >= / > 는 min 쪽으로 해석할 수 있지만, 여기서는 원식 유지
+
+    // 프리셋 최소값
+    const pmin = calcPresetMin();
+    if (pmin != null) {
+      // 숫자 입력식의 min 과 프리셋의 min 중 더 큰 값을 사용 (더 빡센 조건)
+      if (out.min == null || pmin > out.min) out.min = pmin;
+      // '>= pmin' 을 ops에도 넣어두면 가독성↑ (동작엔 영향 없음)
+      out.ops = out.ops.filter(o => !(o.op === '>=')); // 중복 정리 (가볍게)
+      out.ops.push({op: '>=', val: pmin});
+    }
+    return out;
+  };
+
+  const famePass = (fame, constraints) => {
+    const {min, max, ops} = constraints;
     if (min!=null && fame < min) return false;
     if (max!=null && fame > max) return false;
     for (const {op,val} of ops) {
@@ -226,22 +282,22 @@
         sec.style.display = want[label] ? '' : 'none';
       }
     }
-    // 컴팩트 모드 토글: 보이는 섹션 개수가 적으면 카드 축소
+    // 컴팩트 모드 토글
     const wantCount = Object.values(state.blocks).filter(Boolean).length;
-    const compact = wantCount <= 3; // 3개 이하만 보이면 컴팩트
+    const compact = wantCount <= 3;
     for (const r of rows) {
       r.el.classList.toggle('ddunin-compact', compact);
-      // 혹시 고정 높이가 있으면 제거
       r.el.style.minHeight = compact ? 'unset' : '';
     }
   };
 
   const filterRows = () => {
     const exprObj = parseFameExpr(state.fameExpr);
+    const merged = mergeFameConstraints(exprObj);
     for (const r of rows) {
       const byJob = !state.job || r.job === state.job;
       const byRole = !state.role || r.role === state.role;
-      const byFame = famePass(r.fame, exprObj);
+      const byFame = famePass(r.fame, merged);
       r.el.style.display = (byJob && byRole && byFame) ? '' : 'none';
     }
   };
@@ -324,6 +380,18 @@
     state.fameExpr = e.target.value;
   });
 
+  // 프리셋 체크 이벤트
+  $$('#fp-famepresets input[type="checkbox"]').forEach(ch => {
+    ch.addEventListener('change', (e) => {
+      const key = e.target.dataset.fp;
+      const set = new Set(state.famePresets || []);
+      if (e.target.checked) set.add(key);
+      else set.delete(key);
+      state.famePresets = Array.from(set);
+    });
+  });
+
+  // 블록 토글
   $$('#fp-blocks input').forEach(ch => {
     ch.addEventListener('change', (e) => {
       state.blocks[e.target.dataset.block] = e.target.checked;
@@ -336,12 +404,14 @@
     state.job = '';
     state.role = '';
     state.fameExpr = '';
+    state.famePresets = [];
     state.blocks = Object.keys(blockMap).reduce((m,k)=> (m[k]=true,m), {});
     state.sort = 'dom';
     // reset UI
     $('#fp-job').value = '';
     const rAll = $(`#fp-role input[name="role"][value=""]`); if (rAll) rAll.checked = true;
     $('#fp-fameexpr').value = '';
+    $$('#fp-famepresets input[type="checkbox"]').forEach(ch => ch.checked = false);
     $$('#fp-blocks input').forEach(ch => ch.checked = true);
     applyAll();
   });
@@ -351,5 +421,6 @@
     if (e.key === 'Enter') { applyAll(); }
   });
 
-  console.log('%c[필터 보기] 패널이 활성화되었습니다. (역할 필터 & 컴팩트 모드)', 'color:#7dd3fc');
+  console.log('%c[필터 보기] 패널이 활성화되었습니다. (역할 필터 & 컴팩트 모드 & 명성 프리셋)', 'color:#7dd3fc');
 })();
+</script>
