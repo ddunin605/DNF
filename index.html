@@ -1,40 +1,173 @@
 <!doctype html>
-<meta charset="utf-8">
-<title>떠닝 북마클릿 모음</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
-       background:#0e1117;color:#e6edf3;padding:28px}
-  h1{margin:0 0 10px}
-  p{opacity:.9}
-  a.bm{display:inline-block;margin:10px 12px 0 0;padding:12px 16px;border-radius:12px;
-       background:#1f6feb;color:#fff;text-decoration:none;font-weight:700;
-       box-shadow:0 6px 20px rgba(31,111,235,.35)}
-  .card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px;margin:16px 0}
-  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
-</style>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>떠닝 북마클릿 모음</title>
+  <style>
+    :root{
+      --bg:#0f1320;            /* page bg */
+      --card:#141a29;          /* card bg */
+      --ink:#e8eef7;           /* text */
+      --muted:#97a3b6;         /* secondary */
+      --line:#2a3550;          /* border */
+      --brand:#4aa8ff;         /* primary */
+      --brand-2:#7b6cff;       /* accent */
+      --ok:#22c55e;            /* success */
+      --warn:#f59e0b;          /* warning */
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f6f8fc; --card:#ffffff; --ink:#0f172a; --muted:#52607a; --line:#e6ecf5; }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+      background:radial-gradient(1200px 600px at 20% -10%, rgba(123,108,255,.15), transparent 60%),
+                 radial-gradient(900px 600px at 100% 0%, rgba(74,168,255,.14), transparent 60%),
+                 var(--bg);
+      color:var(--ink);
+    }
+    .wrap{max-width:980px;margin:auto;padding:28px}
+    header{
+      position:relative;
+      border:1px solid var(--line);
+      background:linear-gradient(135deg, rgba(74,168,255,.12), rgba(123,108,255,.12));
+      padding:28px 24px; border-radius:20px; box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    header .title{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:600;font-size:12px;color:var(--muted)}
+    .badge b{color:var(--ink)}
+    h1{margin:4px 0 6px;font-size:28px;letter-spacing:.3px}
+    p.lead{margin:0;color:var(--muted)}
 
-<h1>떠닝 북마클릿</h1>
-<p>파란 버튼을 북마크바로 <b>끌어다 놓기</b>만 하면 설치됩니다.</p>
+    /* cards */
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:24px}
+    .card{grid-column:span 12;border:1px solid var(--line);background:var(--card);border-radius:var(--radius);padding:18px 18px 16px;box-shadow:var(--shadow)}
+    @media (min-width:720px){ .card{grid-column:span 6} }
+    @media (min-width:1040px){ .card{grid-column:span 4} }
+    .card h2{margin:2px 0 8px;font-size:18px}
+    .card p{margin:0 0 12px;color:var(--muted)}
 
-<!-- 중천 주간던파 -->
-<div class="card">
-  <h2>① 중천 v3 실행</h2>
-  <p>df/dnf.nexon.com이 아닐 땐 주간 페이지로 이동만 합니다.</p>
-  <a class="bm" href="javascript:(()=>{const TARGET='https://df.nexon.com/mypage/character/weekly';if(!/\b(dnf|df)\.nexon\.com$/.test(location.hostname)){location.href=TARGET;return;}const U1='https://cdn.jsdelivr.net/gh/ddunin605/DNF-week-v3/%EB%96%A0%EB%8B%9D%EC%9D%98%20%EC%A3%BC%EA%B0%84%EB%8D%98%ED%8C%8C%20v3.js';const U2='https://raw.githubusercontent.com/ddunin605/DNF-week-v3/main/%EB%96%A0%EB%8B%9D%EC%9D%98%20%EC%A3%BC%EA%B0%84%EB%8D%98%ED%8C%8C%20v3.js';const Q=u=>u+(u.includes('?')?'&':'?')+'t='+Date.now();const E=m=>alert('❌ '+m+' (사이트 CSP가 막을 수 있어요)');const add=(u,fail)=>{const s=document.createElement('script');s.src=Q(u);s.onerror=fail;document.body.appendChild(s)};const fetchBlob=(u,fail)=>fetch(Q(u)).then(r=>{if(!r.ok)throw 0;return r.text()}).then(t=>{const b=new Blob([t],{type:'text/javascript'});const url=URL.createObjectURL(b);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=fail;document.body.appendChild(s)}).catch(fail);const fail4=()=>E('모든 방식 차단: 북마클릿 불가 · Tampermonkey 권장');const fail3=()=>fetchBlob(U2,fail4);const fail2=()=>fetchBlob(U1,fail3);const fail1=()=>add(U2,fail2);add(U1,onFail1=fail1)})();">공홈-주간던파</a>
-</div>
+    /* bookmarklet button */
+    .bm{
+      --padx:16px; --pady:12px; --ring:0 0 0 0 rgba(74,168,255,.0);
+      display:inline-flex; align-items:center; gap:10px;
+      padding:var(--pady) var(--padx);
+      border-radius:12px; font-weight:800; letter-spacing:.2px;
+      color:#fff; text-decoration:none; position:relative; isolation:isolate;
+      background:linear-gradient(135deg, var(--brand), var(--brand-2));
+      box-shadow:0 12px 26px rgba(94,129,255,.35);
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .bm:hover{transform:translateY(-1.5px); box-shadow:0 14px 32px rgba(94,129,255,.45)}
+    .bm:active{transform:translateY(1px)}
+    .bm .emoji{font-size:18px}
 
-<!-- 던담 모험단 서치 -->
-<div class="card">
-  <h2>② 던담 모험단 서치</h2>
-  <a class="bm" href="javascript:(async()=>{const u='https://raw.githubusercontent.com/ddunin605/DNF/main/250328 던담 모험단 서치.js';try{const r=await fetch(u+(u.includes('?%27)?%27&%27:%27?%27)+%27t=%27+Date.now());if(!r.ok)throw new Error(%27HTTP %27+r.status);const code=await r.text();const blob=new Blob([code],{type:%27text/javascript%27});const url=URL.createObjectURL(blob);const s=document.createElement(%27script%27);s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert(%27❌ 로딩 실패(Blob): CSP가 blob:을 막음%27);document.body.appendChild(s);}catch(e){alert(%27❌ 불러오기 실패: %27+e.message);}})();">던담-서치</a>
-</div>
+    /* actions row */
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);text-decoration:none;font-weight:700;cursor:pointer}
+    .btn:hover{background:rgba(255,255,255,.05)}
 
-<!-- 던담 필터 보기 -->
-<div class="card">
-  <h2>③ 던담 필터 보기</h2>
-  <p>던담 검색결과 페이지에서 필터 패널(직업/명성/섹션 토글/정렬)을 띄웁니다.</p>
-  <a class="bm" href="javascript:(async()=>{const MUST='dundam.xyz';if(!location.hostname.endsWith(MUST)){if(confirm('던담으로 이동할까요?'))location.href='https://dundam.xyz/';return;}const u='https://raw.githubusercontent.com/ddunin605/DNF/refs/heads/main/250828%20%EB%8D%98%EB%8B%B4%20%ED%95%84%ED%84%B0.js';const q=u+(u.includes('?')?'&':'?')+'t='+Date.now();try{const r=await fetch(q);if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert('❌ 로딩 실패(Blob): CSP가 blob:을 막음');document.body.appendChild(s);}catch(e){const s=document.createElement('script');s.src=q;s.onerror=()=>alert('❌ 불러오기 실패: '+e.message+' (사이트 CSP 가능)');document.body.appendChild(s);}})();">던담-필터</a>
-</div>
+    /* code helper */
+    details.how{margin-top:12px}
+    summary{cursor:pointer;color:var(--muted)}
+    code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
 
+    /* tiny toast */
+    .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(16px);opacity:0;transition:all .25s ease;background:#0b1222;border:1px solid var(--line);color:#e8f2ff;padding:10px 14px;border-radius:10px;box-shadow:var(--shadow);z-index:999}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .kbd{display:inline-block;padding:0 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;font:600 12px/20px ui-monospace,Menlo,Consolas,monospace;background:rgba(255,255,255,.04)}
+    footer{margin-top:26px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <span class="badge" title="Bookmarklets for DNF"><span>🔖 북마클릿</span></span>
+        <span class="badge"><span>Made by</span> <b>떠닝</b> 🐇</span>
+      </div>
+      <h1>떠닝 북마클릿</h1>
+      <p class="lead">파란 버튼을 북마크바로 <b>끌어다 놓기</b>만 하면 설치돼요. 드래그가 힘들면 옆의 <span class="kbd">복사</span> 버튼으로 링크를 복사해 수동으로 북마크를 만들 수도 있어요.</p>
+    </header>
 
+    <section class="grid">
+      <!-- ① 중천 주간던파 -->
+      <article class="card">
+        <h2>① 공홈 &middot; <b>중천 v3 실행</b></h2>
+        <p>df/dnf.nexon.com이 아닐 땐 주간 페이지로 <i>이동</i>만 합니다. (CSP로 로드 실패 시 템퍼몽키를 권장합니다)</p>
+        <div class="actions">
+          <a class="bm" id="bm-weekly" href="javascript:(()=>{const TARGET='https://df.nexon.com/mypage/character/weekly';if(!/\b(dnf|df)\.nexon\.com$/.test(location.hostname)){location.href=TARGET;return;}const U1='https://cdn.jsdelivr.net/gh/ddunin605/DNF-week-v3/%EB%96%A0%EB%8B%9D%EC%9D%98%20%EC%A3%BC%EA%B0%84%EB%8D%98%ED%8C%8C%20v3.js';const U2='https://raw.githubusercontent.com/ddunin605/DNF-week-v3/main/%EB%96%A0%EB%8B%9D%EC%9D%98%20%EC%A3%BC%EA%B0%84%EB%8D%98%ED%8C%8C%20v3.js';const Q=u=>u+(u.includes('?')?'&':'?')+'t='+Date.now();const E=m=>alert('❌ '+m+' (사이트 CSP가 막을 수 있어요)');const add=(u,fail)=>{const s=document.createElement('script');s.src=Q(u);s.onerror=fail;document.body.appendChild(s)};const fetchBlob=(u,fail)=>fetch(Q(u)).then(r=>{if(!r.ok)throw 0;return r.text()}).then(t=>{const b=new Blob([t],{type:'text/javascript'});const url=URL.createObjectURL(b);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=fail;document.body.appendChild(s)}).catch(fail);const fail4=()=>E('모든 방식 차단: 북마클릿 불가 · Tampermonkey 권장');const fail3=()=>fetchBlob(U2,fail4);const fail2=()=>fetchBlob(U1,fail3);const fail1=()=>add(U2,fail2);add(U1,fail1)})();"><span class="emoji">⚡</span>공홈-주간던파</a>
+          <button class="btn copy" data-for="bm-weekly">📋 복사</button>
+        </div>
+        <details class="how"><summary>수동 설치 방법 보기</summary>
+          <ol>
+            <li>브라우저 북마크 관리자를 열고(예: <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">O</span>) 새 북마크를 만듭니다.</li>
+            <li>이름은 자유롭게, URL에는 위의 <b>복사</b> 버튼으로 복사한 내용을 붙여넣습니다.</li>
+          </ol>
+        </details>
+      </article>
+
+      <!-- ② 던담 모험단 서치 -->
+      <article class="card">
+        <h2>② 던담 <b>모험단 서치</b></h2>
+        <p>던담에서 모험단 검색 결과를 긁어와 텍스트로 정리합니다. (Blob → 외부스크립트 순으로 시도)</p>
+        <div class="actions">
+          <a class="bm" id="bm-search" href="javascript:(async()=>{const u='https://raw.githubusercontent.com/ddunin605/DNF/main/250328 던담 모험단 서치.js';try{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert('❌ 로딩 실패(Blob): CSP가 blob:을 막음');document.body.appendChild(s);}catch(e){alert('❌ 불러오기 실패: '+e.message);}})();"><span class="emoji">🧭</span>던담-서치</a>
+          <button class="btn copy" data-for="bm-search">📋 복사</button>
+        </div>
+      </article>
+
+      <!-- ③ 던담 필터 보기 -->
+      <article class="card">
+        <h2>③ 던담 <b>필터 패널</b></h2>
+        <p>던담 검색결과 페이지에서 직업/명성/섹션 토글/정렬 패널을 띄웁니다. (아니면 던담으로 이동)</p>
+        <div class="actions">
+          <a class="bm" id="bm-filter" href="javascript:(async()=>{const MUST='dundam.xyz';if(!location.hostname.endsWith(MUST)){if(confirm('던담으로 이동할까요?'))location.href='https://dundam.xyz/';return;}const u='https://raw.githubusercontent.com/ddunin605/DNF/refs/heads/main/250828%20%EB%8D%98%EB%8B%B4%20%ED%95%84%ED%84%B0.js';const q=u+(u.includes('?')?'&':'?')+'t='+Date.now();try{const r=await fetch(q);if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert('❌ 로딩 실패(Blob): CSP가 blob:을 막음');document.body.appendChild(s);}catch(e){const s=document.createElement('script');s.src=q;s.onerror=()=>alert('❌ 불러오기 실패: '+e.message+' (사이트 CSP 가능)');document.body.appendChild(s);}})();"><span class="emoji">🎛️</span>던담-필터</a>
+          <button class="btn copy" data-for="bm-filter">📋 복사</button>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      <p>⚠️ 일부 사이트는 <b>CSP</b>(콘텐츠 보안 정책)으로 외부 스크립트/Blob을 차단할 수 있어요. 그 경우 <b>Tampermonkey</b> 스크립트로 설치하는 방법을 고려하세요.</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">링크가 복사됐어요. 북마크에 붙여넣기 하세요! ✨</div>
+
+  <script>
+    // Copy the href of each bookmarklet link
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const toast = $('#toast');
+    function showToast(msg){
+      toast.textContent = msg; toast.classList.add('show');
+      clearTimeout(showToast.t); showToast.t = setTimeout(()=>toast.classList.remove('show'), 1800);
+    }
+    function copyHref(id){
+      const a = document.getElementById(id);
+      if(!a) return;
+      const href = a.getAttribute('href');
+      navigator.clipboard.writeText(href).then(()=>{
+        showToast('복사 완료! 북마크 URL에 붙여넣으세요 ✅');
+      }).catch(()=>{
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = href; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); showToast('복사 완료(호환 모드) ✅'); }
+        catch(e){ alert('복사에 실패했어요. 수동으로 선택 후 복사해주세요.'); }
+        finally{ document.body.removeChild(ta); }
+      });
+    }
+    $$('.btn.copy').forEach(btn=>{
+      btn.addEventListener('click',()=> copyHref(btn.dataset.for));
+    });
+  </script>
+</body>
+</html>
