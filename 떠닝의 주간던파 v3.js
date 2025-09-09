@@ -344,20 +344,22 @@
   
   const wideChart = document.createElement('div');
   wideChart.style.cssText = 'position:relative;background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:12px;margin:14px 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);overflow:hidden;';
-  // ⬇️ 부모 고정 높이(원하면 220~320px로 조절)
-  wideChart.style.height = '240px';
   
   const chartTitle = document.createElement('div');
   chartTitle.textContent = '📈 주간 태초 분포';
   chartTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
   
-  const chartCanvas = document.createElement('canvas');
-  // ⬇️ 자식은 100%로 채우기
-  chartCanvas.style.cssText = 'display:block;width:100%;height:100%;';
-
+  // ⬇️ 차트 전용 래퍼(여기에만 높이 고정)
+  const chartBox = document.createElement('div');
+  chartBox.style.cssText = 'position:relative;width:100%;height:240px;overflow:hidden;';
   
+  // ⬇️ 캔버스는 래퍼를 100% 채우도록
+  const chartCanvas = document.createElement('canvas');
+  chartCanvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;display:block;';
+  
+  chartBox.appendChild(chartCanvas);
   wideChart.appendChild(chartTitle);
-  wideChart.appendChild(chartCanvas);
+  wideChart.appendChild(chartBox);
 
   container.appendChild(topBrand);
   container.appendChild(mainGrid);
@@ -502,24 +504,30 @@
     const labels = seq.map((w)=> `W${w.idx}`);
     const data = seq.map(w => w.taecho || 0);
     function mountChart() {
-      const ctx = wideChart.querySelector('canvas').getContext('2d');
+      // ⬇️ chartBox 안의 canvas
+      const ctx = chartBox.querySelector('canvas').getContext('2d');
       return new Chart(ctx, {
         type: 'line',
         data: { labels, datasets: [{ label:'', data, borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)', tension:.3, pointRadius:1.8, borderWidth:2 }]},
         options: {
-          responsive: true,          // ✅ 반응형 활성화
+          responsive: true,
           maintainAspectRatio: false,
+          // ⬇️ ResizeObserver 과민반응 완화
+          resizeDelay: 150,
           plugins: { legend:{ display:false }, tooltip:{ intersect:false, mode:'index' } },
           scales: {
             x: { ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true }, grid:{ color:'rgba(42,46,70,.55)'} },
             y: { ticks:{ color:'#b9c0ff' }, grid:{ color:'rgba(42,46,70,.55)'}, beginAtZero:true }
           }
         }
-      });      
+      });
     }
     let chart = mountChart();
+
+    
     // 첫 페인트 후 한 번만 수동 리사이즈
 })();
+
 
 
 
