@@ -511,18 +511,10 @@
       });      
     }
     let chart = mountChart();
-    let resizeId;
-    function onResize() {
-      clearTimeout(resizeId);
-      resizeId = setTimeout(() => {
-        chart.destroy();
-        chart = mountChart();
-      }, 120);
-    }
-    window.addEventListener('resize', onResize, { passive: true });
-  };
-  document.head.appendChild(script);
+    // 첫 페인트 후 한 번만 수동 리사이즈
+    requestAnimationFrame(() => chart.resize());
 })();
+
 
 
 
