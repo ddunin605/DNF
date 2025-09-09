@@ -7,16 +7,13 @@
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
   async function clickAllMoreButtons() {
-    const maxClicks = 100;
-    const deadline = Date.now() + 30000;
+    const maxClicks = 100, deadline = Date.now() + 30000;
     let clicks = 0;
     const findBtn = () => document.querySelector('a.btn.btntype_bu60');
     while (Date.now() < deadline && clicks < maxClicks) {
       const btn = findBtn();
       if (!btn || btn.style.display === 'none' || btn.disabled) break;
-      btn.click();
-      clicks++;
-      await delay(300);
+      btn.click(); clicks++; await delay(300);
     }
   }
   await clickAllMoreButtons();
@@ -81,52 +78,40 @@
     padding:16px;background:radial-gradient(1200px 600px at 20% -10%,rgba(77,98,255,.08),transparent),#0e111d;color:#eaf0ff;border:1px solid #24283e;border-radius:16px;
     margin:18px auto;max-width:1160px;box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
     font-family:'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    position:relative; overflow:visible; z-index:4000; padding-bottom:32px;
   `;
-  // ★ 푸터 겹침/잘림 방지(핵심)
-  container.style.position = 'relative';
-  container.style.overflow  = 'visible';
-  container.style.zIndex    = '4000';
-  container.style.paddingBottom = '32px';
 
+  // 상단 바
   const topBrand = document.createElement('div');
   topBrand.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;';
-  const brandLeft = document.createElement('div');
-  brandLeft.style.cssText='display:flex;align-items:center;gap:10px;';
+  const brandLeft = document.createElement('div'); brandLeft.style.cssText='display:flex;align-items:center;gap:10px;';
   const guild = document.createElement('div');
   guild.textContent = moheomdan;
   guild.style.cssText="font-family:'DNFBitBitv2',sans-serif;font-size:34px;letter-spacing:.3px;color:#ffffff;text-shadow:0 1px 0 #1a1d33, 0 0 16px rgba(120,140,255,.14);line-height:1;";
   brandLeft.appendChild(guild);
-  const brandRight = document.createElement('div');
-  brandRight.style.cssText='display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;';
-  function chip(t){ const d=document.createElement('div'); d.textContent=t; d.style.cssText='padding:6px 10px;border-radius:999px;background:linear-gradient(180deg,#161a2e,#12162a);border:1px solid #2a2f50;color:#cfe1ff;font-weight:700;font-size:11px;'; return d; }
+  const brandRight = document.createElement('div'); brandRight.style.cssText='display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;';
+  const chip = (t)=>{ const d=document.createElement('div'); d.textContent=t; d.style.cssText='padding:6px 10px;border-radius:999px;background:linear-gradient(180deg,#161a2e,#12162a);border:1px solid #2a2f50;color:#cfe1ff;font-weight:700;font-size:11px;'; return d; };
   brandRight.appendChild(chip(`W${weekIndex}`));
   brandRight.appendChild(chip(`D+${dPlus}`));
   brandRight.appendChild(chip(`에픽 10 : ${tenEpicRate}`));
   brandRight.appendChild(chip(`심숭 1 : ${oneSimyeonRate}`));
-  brandRight.appendChild(chip("떠닝의 중천 모아보기 v3"));
+  brandRight.appendChild(chip('떠닝의 중천 모아보기 v3'));
   topBrand.appendChild(brandLeft); topBrand.appendChild(brandRight);
 
+  // 메인 그리드
   const mainGrid = document.createElement('div');
-  mainGrid.style.cssText='display:grid;grid-template-columns:1fr .8fr;gap:14px;align-items:start;';
-  const leftCol = document.createElement('div');
-  const rightCol = document.createElement('div');
+  mainGrid.style.cssText='display:grid;grid-template-columns:1fr .8fr;gap:14px;align-items:stretch;';
 
-  const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';
-  const ASSET_VERSION = await (async () => {
-    try { const r = await fetch(ASSET_BASE + 'version.txt?ts=' + Date.now(), { cache: 'no-store' }); if (r.ok) return (await r.text()).trim(); } catch (e) {}
-    return new Date().toISOString().slice(0,10);
-  })();
-  const v = (f) => `${ASSET_BASE}${f}?v=${encodeURIComponent(ASSET_VERSION)}`;
-
-  const CUSTOM_ICON_FILES = {
-    '레벨 상승치': 'week_ico01.png','피로도 사용량': 'week_ico02.png','115Lv 에픽': 'week_ico04.png','심연 : 종말의 숭배자': 'week_ico18.png',
-    '종말의 숭배자': 'week_ico18_1.png','115Lv 태초': 'week_ico19.png','베누스': 'week_ico20.png','115Lv 레전더리': 'week_ico21.png',
-    '나벨': 'week_ico22.png','이내 황혼전': 'week_ico23.png',
-  };
-  const CUSTOM_ICONS = Object.fromEntries(Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)]));
-  const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
-  const ICONS = {"레벨 상승치":"week_ico01.png","피로도 사용량":"week_ico02.png","115Lv 태초":"week_ico19.png","115Lv 에픽":"week_ico04.png","115Lv 레전더리":"week_ico21.png","심연 : 종말의 숭배자":"week_ico18.png","종말의 숭배자":"week_ico18.png","나벨":"week_ico22.png","베누스":"week_ico20.png","이내 황혼전":"week_ico23.png"};
-  const resolveIcon = (k) => CUSTOM_ICONS[k] || (ICON_BASE + (ICONS[k] || 'week_ico04.png'));
+  // === 좌측 패널(카드 묶음) ===
+  const leftPanel = document.createElement('section');
+  leftPanel.style.cssText = `
+    background:linear-gradient(180deg,#121733,#0d1228);
+    border:1px solid #2a2e46;border-radius:14px;padding:12px;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+    display:flex; flex-direction:column; gap:10px; min-height:200px;
+  `;
+  const leftCardsWrap = document.createElement('div');
+  leftCardsWrap.style.cssText = 'display:flex;flex-direction:column;gap:10px;flex:1 1 auto;';
 
   function stripeGrad(k){
     if (k==='레벨 상승치' || k==='피로도 사용량') return 'linear-gradient(180deg,#9bd1ff,#5fa8ff)';
@@ -140,6 +125,20 @@
     if (k==='이내 황혼전') return 'linear-gradient(180deg,#ffffff,#0d1228)';
     return 'linear-gradient(180deg,#8be6c0,#93c5fd)';
   }
+  const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';
+  const ASSET_VERSION = await (async () => {
+    try { const r = await fetch(ASSET_BASE + 'version.txt?ts=' + Date.now(), { cache: 'no-store' }); if (r.ok) return (await r.text()).trim(); } catch(e){}
+    return new Date().toISOString().slice(0,10);
+  })();
+  const v = (f) => `${ASSET_BASE}${f}?v=${encodeURIComponent(ASSET_VERSION)}`;
+  const CUSTOM_ICON_FILES = {
+    '레벨 상승치': 'week_ico01.png','피로도 사용량': 'week_ico02.png','115Lv 에픽': 'week_ico04.png','심연 : 종말의 숭배자': 'week_ico18.png',
+    '종말의 숭배자': 'week_ico18_1.png','115Lv 태초': 'week_ico19.png','베누스': 'week_ico20.png','115Lv 레전더리': 'week_ico21.png','나벨': 'week_ico22.png','이내 황혼전': 'week_ico23.png',
+  };
+  const CUSTOM_ICONS = Object.fromEntries(Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)]));
+  const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
+  const ICONS = {"레벨 상승치":"week_ico01.png","피로도 사용량":"week_ico02.png","115Lv 태초":"week_ico19.png","115Lv 에픽":"week_ico04.png","115Lv 레전더리":"week_ico21.png","심연 : 종말의 숭배자":"week_ico18.png","종말의 숭배자":"week_ico18.png","나벨":"week_ico22.png","베누스":"week_ico20.png","이내 황혼전":"week_ico23.png"};
+  const resolveIcon = (k) => CUSTOM_ICONS[k] || (ICON_BASE + (ICONS[k] || 'week_ico04.png'));
 
   function makeCard(k){
     const wrap = document.createElement('div');
@@ -147,11 +146,8 @@
       position:relative;background: linear-gradient(180deg,rgb(13,32,56) 0%,rgb(51,70,105) 100%);
       border:1px solid rgb(20,20,46);border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
       display:flex; gap:10px; align-items:center; padding:10px;`;
-    const stripe = document.createElement('div');
-    stripe.style.cssText = `width:5px; align-self:stretch; border-radius:8px; background:${stripeGrad(k)};`;
-    const iconBadge = document.createElement('div');
-    iconBadge.style.cssText = `flex:0 0 52px; height:52px; border-radius:12px;background:rgba(0,0,0,.5);border:1px solid rgba(197,205,252,.6);
-      display:flex; align-items:center; justify-content:center; box-shadow:0 2px 10px rgba(0,0,0,0), inset 0 0 10px rgba(0,0,0,.03); backdrop-filter: blur(2px) saturate(120%);`;
+    const stripe = document.createElement('div'); stripe.style.cssText = `width:5px; align-self:stretch; border-radius:8px; background:${stripeGrad(k)};`;
+    const iconBadge = document.createElement('div'); iconBadge.style.cssText = `flex:0 0 52px; height:52px; border-radius:12px;background:rgba(0,0,0,.5);border:1px solid rgba(197,205,252,.6);display:flex; align-items:center; justify-content:center;`;
     const img = document.createElement('img'); img.src = resolveIcon(k); img.alt = k; img.crossOrigin='anonymous'; img.style.cssText='width:36px;height:36px;display:block;';
     iconBadge.appendChild(img);
     const body = document.createElement('div'); body.style.cssText='display:flex;flex-direction:column;gap:3px;min-width:0;';
@@ -170,22 +166,28 @@
   ];
   rows.forEach((arr,idx)=>{
     const row = document.createElement('div');
-    const cols = arr.length;
-    row.style.cssText = `display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:10px;margin-bottom:${idx===rows.length-1?0:10}px;`;
+    row.style.cssText = `display:grid;grid-template-columns:repeat(${arr.length},minmax(0,1fr));gap:10px;`;
     arr.forEach(k=>row.appendChild(makeCard(k)));
-    leftCol.appendChild(row);
+    leftCardsWrap.appendChild(row);
   });
+  leftPanel.appendChild(leftCardsWrap);
 
-  // ===== 캘린더 =====
-  const calCard = document.createElement('div');
-  calCard.style.cssText='background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);';
+  // === 우측 패널(캘린더) ===
+  const rightPanel = document.createElement('section');
+  rightPanel.style.cssText = `
+    background:linear-gradient(180deg,#121733,#0d1228);
+    border:1px solid #2a2e46;border-radius:14px;padding:10px;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+    display:flex;flex-direction:column;gap:10px;min-height:200px;
+  `;
+
   const calTitle = document.createElement('div');
   calTitle.textContent = '🗓️ 태초 캘린더';
   calTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
-  calCard.appendChild(calTitle);
+  rightPanel.appendChild(calTitle);
 
   const byMonth = new Map();
-  const sortedWeeks = weeks.slice().sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 })); // ★ slice()로 원본 보호
+  const sortedWeeks = weeks.slice().sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
   sortedWeeks.forEach(w=>{ const m=w.start.getMonth()+1; if(!byMonth.has(m)) byMonth.set(m,[]); byMonth.get(m).push(w); });
 
   const monthGrid = document.createElement('div');
@@ -195,8 +197,7 @@
   for (let m=1; m<=12; m++){
     const box = document.createElement('section');
     box.style.cssText='background:#0c132c;border:1px solid #273055;border-radius:10px;padding:8px;';
-    const titleM = document.createElement('div');
-    titleM.textContent = `${m}월`;
+    const titleM = document.createElement('div'); titleM.textContent = `${m}월`;
     titleM.style.cssText="font-family:'DNFBitBitv2',sans-serif;font-weight:800;margin-bottom:6px;color:#cdd3ff;font-size:12px;";
     box.appendChild(titleM);
 
@@ -231,26 +232,9 @@
     box.appendChild(dates);
     monthGrid.appendChild(box);
   }
-  calCard.appendChild(monthGrid);
-  rightCol.appendChild(calCard);
+  rightPanel.appendChild(monthGrid);
 
-  const bottomInfoWrap = document.createElement('div');
-  bottomInfoWrap.style.cssText='margin-top:12px;text-align:center;opacity:.95;';
-  const bottomInfo = document.createElement('div');
-  bottomInfo.textContent = `📅 2025.01.09 ~ ${fmtYMD(END_DATE).replace(/-/g,'.')} · ⏱️ ${nowStr}`;
-  bottomInfo.style.cssText='font-size:12px;color:#98a6d8;';
-  bottomInfoWrap.appendChild(bottomInfo);
-
-  const creator = document.createElement('div');
-  creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
-  const iconUrl = 'https://ddunin605.github.io/DNF/ddunin.png' + `?v=${encodeURIComponent(ASSET_VERSION)}`;
-  function mkIcon(){ const i=new Image(); i.src=iconUrl; i.crossOrigin='anonymous'; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; }
-  const makerText = document.createElement('span'); makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
-  makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
-  creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
-  bottomInfoWrap.appendChild(creator);
-
-  // ===== 차트 카드(짤림/루프 방지 설정) =====
+  // === 차트 카드 ===
   const wideChart = document.createElement('div');
   wideChart.style.cssText = [
     'position:relative','background:linear-gradient(180deg,#121733,#0d1228)','border:1px solid #2a2e46','border-radius:14px',
@@ -268,19 +252,48 @@
   ].join(';');
 
   const chartCanvas = document.createElement('canvas');
-  chartCanvas.style.cssText = 'display:block;width:100%;height:240px;'; // ★ CSS 높이 고정
+  chartCanvas.style.cssText = 'display:block;width:100%;height:240px;pointer-events:auto;cursor:crosshair;';
 
   chartBox.appendChild(chartCanvas);
   wideChart.appendChild(chartTitle);
   wideChart.appendChild(chartBox);
 
+  // 하단 정보
+  const bottomInfoWrap = document.createElement('div');
+  bottomInfoWrap.style.cssText='margin-top:12px;text-align:center;opacity:.95;';
+  const bottomInfo = document.createElement('div');
+  bottomInfo.textContent = `📅 2025.01.09 ~ ${fmtYMD(END_DATE).replace(/-/g,'.')} · ⏱️ ${nowStr}`;
+  bottomInfo.style.cssText='font-size:12px;color:#98a6d8;';
+  bottomInfoWrap.appendChild(bottomInfo);
+  const creator = document.createElement('div');
+  creator.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;';
+  const iconUrl = 'https://ddunin605.github.io/DNF/ddunin.png' + `?v=${encodeURIComponent(ASSET_VERSION)}`;
+  const mkIcon=()=>{ const i=new Image(); i.src=iconUrl; i.crossOrigin='anonymous'; i.style.width='18px'; i.style.height='18px'; i.style.display='block'; return i; };
+  const makerText = document.createElement('span'); makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
+  makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
+  creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
+  bottomInfoWrap.appendChild(creator);
+
+  // 조립
   container.appendChild(topBrand);
   container.appendChild(mainGrid);
-  mainGrid.appendChild(leftCol);
-  mainGrid.appendChild(rightCol);
+  mainGrid.appendChild(leftPanel);
+  mainGrid.appendChild(rightPanel);
   container.appendChild(wideChart);
   container.appendChild(bottomInfoWrap);
   document.body.prepend(container);
+
+  // ===== 높이 동일화 (좌측 패널 = 우측 패널 높이) =====
+  function equalizeHeights() {
+    // 먼저 우측 높이 측정
+    const h = rightPanel.offsetHeight;
+    if (h > 0) leftPanel.style.minHeight = h + 'px';
+  }
+  equalizeHeights();
+  const ro = new ResizeObserver(equalizeHeights);
+  ro.observe(rightPanel);
+  window.addEventListener('load', equalizeHeights);
+  window.addEventListener('resize', equalizeHeights);
 
   // ===== Chart.js 로딩 & 1회 렌더 =====
   function mountChartFixed(canvas, labels, data) {
@@ -303,11 +316,14 @@
 
     const chart = new Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ label:'', data, borderWidth:2, tension:.3, pointRadius:1.8,
-        borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)'}]},
+      data: { labels, datasets: [{
+        label:'', data, borderWidth:2, tension:.3, pointRadius:2,
+        borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)'
+      }]},
       options: {
         responsive:false, maintainAspectRatio:false, animation:false,
-        plugins:{ legend:{display:false}, tooltip:{intersect:false, mode:'index'} },
+        interaction:{ mode:'index', intersect:false },   // ← 호버 개선
+        plugins:{ legend:{display:false}, tooltip:{enabled:true} },
         scales:{
           x:{ ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true, maxTicksLimit:12 }, grid:{ color:'rgba(42,46,70,.55)'} },
           y:{ ticks:{ color:'#b9c0ff' }, grid:{ color:'rgba(42,46,70,.55)'}, beginAtZero:true }
@@ -315,7 +331,6 @@
       }
     });
     canvas.__chart__ = chart;
-    console.log('[chart] mounted', { w, h, dpr, points:data.length });
     return chart;
   }
 
@@ -330,11 +345,11 @@
 
   (async () => {
     await ensureChartJs();
-    await new Promise(requestAnimationFrame); // 한 프레임 대기
+    await new Promise(requestAnimationFrame);
     const seq = weeks.slice().sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
     const labels = seq.map(w => `W${w.idx}`);
     const data = seq.map(w => w.taecho || 0);
-    const canvas = chartBox.querySelector('canvas');
+    const canvas = chartCanvas;
     if (!canvas) { console.error('[chart] canvas not found'); return; }
     mountChartFixed(canvas, labels, data);
   })();
