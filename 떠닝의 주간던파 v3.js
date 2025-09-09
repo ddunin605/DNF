@@ -340,15 +340,22 @@
   makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
   creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
   bottomInfoWrap.appendChild(creator);
-  
+
   
   const wideChart = document.createElement('div');
   wideChart.style.cssText = 'position:relative;background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:12px;margin:14px 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);overflow:hidden;';
+  // ⬇️ 부모 고정 높이(원하면 220~320px로 조절)
+  wideChart.style.height = '240px';
+  
   const chartTitle = document.createElement('div');
   chartTitle.textContent = '📈 주간 태초 분포';
   chartTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
+  
   const chartCanvas = document.createElement('canvas');
-  chartCanvas.style.cssText = 'display:block;width:100%;height:200px;';
+  // ⬇️ 자식은 100%로 채우기
+  chartCanvas.style.cssText = 'display:block;width:100%;height:100%;';
+
+  
   wideChart.appendChild(chartTitle);
   wideChart.appendChild(chartCanvas);
 
@@ -512,8 +519,8 @@
     }
     let chart = mountChart();
     // 첫 페인트 후 한 번만 수동 리사이즈
-    requestAnimationFrame(() => chart.resize());
 })();
+
 
 
 
