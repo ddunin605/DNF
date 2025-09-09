@@ -468,3 +468,5 @@ async function ensureChartJs() {
 
   mountChartFixed(canvas, labels, data); // ✅ 딱 1번만 렌더
 })();
+
+})();
