@@ -353,9 +353,9 @@
   const chartBox = document.createElement('div');
   chartBox.style.cssText = 'position:relative;width:100%;height:240px;overflow:hidden;';
   
-  // ⬇️ 캔버스는 래퍼를 100% 채우도록
   const chartCanvas = document.createElement('canvas');
-  chartCanvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;display:block;';
+  // 절대배치/퍼센트 높이 제거 → 레이아웃 안정
+  chartCanvas.style.cssText = 'display:block;width:100%;height:auto;';
   
   chartBox.appendChild(chartCanvas);
   wideChart.appendChild(chartTitle);
@@ -503,17 +503,28 @@
     const seq = weeks.sort((a,b)=>a.start-b.start).map((w,i)=>({ ...w, idx:i+1 }));
     const labels = seq.map((w)=> `W${w.idx}`);
     const data = seq.map(w => w.taecho || 0);
-    function mountChart() {
-      // ⬇️ chartBox 안의 canvas
-      const ctx = chartBox.querySelector('canvas').getContext('2d');
+    
+    function mountChartFixed() {
+      const canvas = chartBox.querySelector('canvas');
+      const rect = chartBox.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+    
+      // ✅ 한 번만 정확한 크기로 고정
+      canvas.style.width  = rect.width  + 'px';   // CSS 픽셀
+      canvas.style.height = rect.height + 'px';   // CSS 픽셀
+      canvas.width  = Math.round(rect.width  * dpr); // 실제 비트맵
+      canvas.height = Math.round(rect.height * dpr);
+    
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 고해상도 보정
+    
       return new Chart(ctx, {
         type: 'line',
         data: { labels, datasets: [{ label:'', data, borderColor:'rgba(255,215,0,1)', backgroundColor:'rgba(255,215,0,.12)', tension:.3, pointRadius:1.8, borderWidth:2 }]},
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          // ⬇️ ResizeObserver 과민반응 완화
-          resizeDelay: 150,
+          responsive: false,            // ⬅️ 반응형 완전 OFF (루프 원천 차단)
+          maintainAspectRatio: false,   // 안전하게 유지
+          animation: false,             // (선택) 초기 애니도 제거
           plugins: { legend:{ display:false }, tooltip:{ intersect:false, mode:'index' } },
           scales: {
             x: { ticks:{ color:'#b9c0ff', maxRotation:0, autoSkip:true }, grid:{ color:'rgba(42,46,70,.55)'} },
@@ -522,11 +533,13 @@
         }
       });
     }
-    let chart = mountChart();
+    let chart = mountChartFixed();
+
 
     
     // 첫 페인트 후 한 번만 수동 리사이즈
 })();
+
 
 
 
