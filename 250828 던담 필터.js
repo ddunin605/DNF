@@ -1,4 +1,3 @@
-<script>
 (() => {
   // ==== CONFIG / HELPERS =====================================================
   const ROOT = document.querySelector('#search_result .sr-result');
@@ -423,4 +422,3 @@
 
   console.log('%c[필터 보기] 패널이 활성화되었습니다. (역할 필터 & 컴팩트 모드 & 명성 프리셋)', 'color:#7dd3fc');
 })();
-</script>
