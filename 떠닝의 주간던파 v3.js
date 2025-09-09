@@ -5,6 +5,7 @@
   const fmtYMD = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
+  // "더보기" 전부 펼치기
   async function clickAllMoreButtons() {
     const maxClicks = 100;
     const deadline = Date.now() + 30000;
@@ -20,9 +21,11 @@
   }
   await clickAllMoreButtons();
 
+  // 집계
   const summary = { '레벨 상승치': 0, '피로도 사용량': 0, '115Lv 태초': 0, '115Lv 에픽': 0, '115Lv 레전더리': 0, '심연 : 종말의 숭배자': 0, '종말의 숭배자': 0, '나벨': 0, '베누스': 0, '이내 황혼전': 0 };
   const weeks = [];
   const normalize = s => (s||'').replace(/\s*아이템$/,'').replace(/\s*클리어$/,'').replace(/\s+/g,' ').trim();
+
   document.querySelectorAll('#weeklyArea dl').forEach(dl => {
     const span = dl.querySelector('dt span')?.textContent || '';
     const m = span.match(/(\d{4}\.\d{2}\.\d{2})\s+06시\s*~\s*(\d{4}\.\d{2}\.\d{2})\s+06시/);
@@ -31,6 +34,7 @@
     const start = new Date(sStr.replace(/\./g,'-')+'T06:00:00');
     const end   = new Date(eStr.replace(/\./g,'-')+'T06:00:00');
     if (!(start >= START_DATE && end <= END_DATE)) return;
+
     let weekTaecho = 0;
     dl.querySelectorAll('dd p').forEach(p=>{
       let label = normalize(p.querySelector('span')?.innerText);
@@ -49,6 +53,7 @@
     weeks.push({ start, end, taecho: weekTaecho });
   });
 
+  // 지표
   const epic = summary['115Lv 에픽'];
   const taecho= summary['115Lv 태초'];
   const simyeon=summary['심연 : 종말의 숭배자'];
@@ -57,14 +62,17 @@
   const dPlus = Math.floor((NOW - START_DATE) / 86400000) + 1;
   const weekIndex = Math.floor((NOW - START_DATE) / (86400000*7)) + 1;
 
+  // 헤더
   let moheomdan = '';
   const grpHTML = document.querySelector('p.chargroup')?.innerHTML || '';
   const gm = grpHTML.replace(/\s/g,'').match(/모험단<\/i>Lv\.\d+([^<]+)/);
   moheomdan = (gm && gm[1]) ? gm[1] : (document.querySelector('#personalArea ul.name li')?.textContent.trim() || '모험단');
   const nowStr = NOW.toLocaleString('ko-KR');
 
+  // 기존 박스 제거
   document.querySelector('#df-summary-box')?.remove();
 
+  // 폰트
   const style = document.createElement('style');
   style.textContent = `
   @font-face{font-family:'DNFBitBitv2';font-style:normal;font-weight:400;src:url('https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf') format('opentype')}
@@ -72,6 +80,7 @@
   document.head.appendChild(style);
   await Promise.all([document.fonts.load("34px 'DNFBitBitv2'"), document.fonts.ready]);
 
+  // 컨테이너
   const container = document.createElement('div');
   container.id='df-summary-box';
   container.style.cssText=`
@@ -80,6 +89,7 @@
     font-family:'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
   `;
 
+  // 상단 브랜드
   const topBrand = document.createElement('div');
   topBrand.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;';
   const brandLeft = document.createElement('div');
@@ -98,12 +108,20 @@
   brandRight.appendChild(chip("떠닝의 중천 모아보기 v3"));
   topBrand.appendChild(brandLeft); topBrand.appendChild(brandRight);
 
+  // 메인 그리드 (비율: 좌 1.25, 우 0.75)
   const mainGrid = document.createElement('div');
-  mainGrid.style.cssText='display:grid;grid-template-columns:1.9fr .1fr;gap:14px;align-items:start;';
+  mainGrid.style.cssText='display:grid;grid-template-columns:1.25fr .75fr;gap:14px;align-items:start;';
 
+  // 좌/우 컬럼
   const leftCol = document.createElement('div');
   const rightCol = document.createElement('div');
 
+  // ⬇️ 왼쪽 내용 래퍼(세로 맞춤용 스케일 대상)
+  const leftInnerWrap = document.createElement('div');
+  leftInnerWrap.style.cssText = 'transform-origin: top left;';
+  leftCol.appendChild(leftInnerWrap);
+
+  // 에셋
   const ASSET_BASE = 'https://ddunin605.github.io/DNF/weekdnf/';
   const ASSET_VERSION = await (async () => {
     try {
@@ -126,9 +144,7 @@
     '나벨': 'week_ico22.png',
     '이내 황혼전': 'week_ico23.png',
   };
-  const CUSTOM_ICONS = Object.fromEntries(
-    Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)])
-  );
+  const CUSTOM_ICONS = Object.fromEntries(Object.entries(CUSTOM_ICON_FILES).map(([k, fname]) => [k, v(fname)]));
   const ICON_BASE = "https://resource.df.nexon.com/ui/img/mypage/";
   const ICONS = {
     "레벨 상승치": "week_ico01.png",
@@ -142,12 +158,9 @@
     "베누스": "week_ico20.png",
     "이내 황혼전": "week_ico23.png"
   };
-  const resolveIcon = (k) => {
-    if (CUSTOM_ICONS[k]) return CUSTOM_ICONS[k];
-    if (ICONS[k]) return ICON_BASE + ICONS[k];
-    return ICON_BASE + 'week_ico04.png';
-  };
+  const resolveIcon = (k) => CUSTOM_ICONS[k] || (ICON_BASE + (ICONS[k] || 'week_ico04.png'));
 
+  // 카드
   function stripeGrad(k){
     if (k==='레벨 상승치' || k==='피로도 사용량') return 'linear-gradient(180deg,#9bd1ff,#5fa8ff)';
     if (k==='115Lv 태초') return 'linear-gradient(180deg,#8be6c0,#6fb6ff)';
@@ -212,15 +225,16 @@
   rows.forEach((arr,idx)=>{
     const row = document.createElement('div');
     const cols = arr.length;
-    row.style.cssText = `display:grid;grid-template-columns:repeat(${cols},minmax(0,1fr));gap:10px;margin-bottom:${idx===rows.length-1?0:10}px;`;
+    // 세 번째 줄(레전더리)만 살짝 넓힘
+    const template = (idx===2) ? '1fr 1fr 1.15fr' : `repeat(${cols},minmax(0,1fr))`;
+    row.style.cssText = `display:grid;grid-template-columns:${template};gap:10px;margin-bottom:${idx===rows.length-1?0:10}px;`;
     arr.forEach(k=>row.appendChild(makeCard(k)));
-    leftCol.appendChild(row);
+    // ⬇️ 왼쪽 래퍼에 붙임
+    leftInnerWrap.appendChild(row);
   });
 
   // =========================
-  //  🗓️ 태초 캘린더
-  //    - 가로폭 유지
-  //    - 세로 전체(타이틀+패딩 포함) 327.62px 고정
+  //  🗓️ 태초 캘린더 (세로 327.62 고정)
   // =========================
   const calCard = document.createElement('div');
   calCard.style.cssText='background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.35);position:relative;overflow:hidden;';
@@ -229,7 +243,6 @@
   calTitle.style.cssText="margin:0 0 6px;font-size:15px;font-family:'DNFBitBitv2',sans-serif;padding-left:12px;color:#e9f1ff;";
   calCard.appendChild(calTitle);
 
-  // 실제 달력 콘텐츠 래퍼 (스케일 대상)
   const calInnerWrap = document.createElement('div');
   calInnerWrap.style.cssText = 'transform-origin: top left;';
   calCard.appendChild(calInnerWrap);
@@ -244,7 +257,6 @@
 
   function mmdd(d){ return `${d.getMonth()+1}/${d.getDate()}`; }
 
-  // 컴팩트 기본값 (너무 크게 보이면 살짝 줄임)
   const BOX_PAD = 8, GAP = 4, RADIUS = 10, CELL_PAD = 6;
   const FZ_TITLE = 12, FZ_HEADER = 10, FZ_CELL = 10, FZ_DATE = 9;
   const MAX_COLS = 5;
@@ -308,6 +320,7 @@
 
   rightCol.appendChild(calCard);
 
+  // 하단 정보
   const bottomInfoWrap = document.createElement('div');
   bottomInfoWrap.style.cssText='margin-top:12px;text-align:center;opacity:.95;';
   const bottomInfo = document.createElement('div');
@@ -322,9 +335,10 @@
   const makerText = document.createElement('span');
   makerText.textContent = decodeURIComponent("AI%EB%96%A0%EB%8B%9D%20%EC%A0%9C%EC%9E%91");
   makerText.style.cssText="font-family:'DNFBitBitv2','Malgun Gothic',sans-serif;font-size:13px;font-weight:400;color:#dbe7ff;letter-spacing:.3px;";
-  bottomInfoWrap.appendChild(creator);
   creator.appendChild(mkIcon()); creator.appendChild(makerText); creator.appendChild(mkIcon());
+  bottomInfoWrap.appendChild(creator);
 
+  // 차트
   const wideChart = document.createElement('div');
   wideChart.style.cssText = 'position:relative;background:linear-gradient(180deg,#121733,#0d1228);border:1px solid #2a2e46;border-radius:14px;padding:12px;margin:14px 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.35);overflow:hidden;';
   const chartTitle = document.createElement('div');
@@ -335,6 +349,7 @@
   wideChart.appendChild(chartTitle);
   wideChart.appendChild(chartCanvas);
 
+  // 조립
   container.appendChild(topBrand);
   container.appendChild(mainGrid);
   mainGrid.appendChild(leftCol);
@@ -343,27 +358,33 @@
   container.appendChild(bottomInfoWrap);
   document.body.prepend(container);
 
-  // ===== PNG/클립보드 기능 전부 제거됨 =====
-
-  // ===== 달력 높이 정확히 327.62px로 맞추기 =====
+  // ===== 높이 정렬: 달력/왼쪽 모두 327.62px =====
   requestAnimationFrame(() => {
-    const TARGET = 327.62;               // 전체 카드 높이(타이틀+패딩 포함)
-    const padTB = 20;                    // calCard padding 10px * 2
+    const TARGET = 327.62;                 // 원하는 보이는 전체 높이
+    // 달력 스케일
+    const padTB = 20;                       // calCard padding 10px * 2
     const titleH = calTitle.getBoundingClientRect().height + 6; // margin-bottom 6
     const innerH0 = calInnerWrap.getBoundingClientRect().height;
     const usable = TARGET - padTB - titleH;
-
     if (innerH0 > 0 && usable > 0) {
-      // 균등 스케일(가로폭은 유지하도록 width 보정)
       const scale = Math.min(1, usable / innerH0);
       calInnerWrap.style.transformOrigin = 'top left';
       calInnerWrap.style.transform = `scale(${scale})`;
-      calInnerWrap.style.width = `${100/scale}%`; // 가로폭 유지
+      calInnerWrap.style.width = `${100/scale}%`;        // 가로 보정
       calCard.style.height = `${TARGET}px`;
+    }
+    // 왼쪽 스케일
+    const leftH0 = leftInnerWrap.getBoundingClientRect().height;
+    if (leftH0 > 0) {
+      const leftScale = TARGET / leftH0;
+      leftInnerWrap.style.transformOrigin = 'top left';
+      leftInnerWrap.style.transform = `scale(${leftScale})`;
+      leftInnerWrap.style.width = `${100/leftScale}%`;   // 가로 보정
+      leftCol.style.height = `${TARGET}px`;              // 영역 자체 높이 고정
     }
   });
 
-  // ===== Chart.js =====
+  // Chart.js
   const script=document.createElement('script');
   script.src='https://cdn.jsdelivr.net/npm/chart.js';
   script.onload = () => {
