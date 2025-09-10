@@ -20,13 +20,45 @@
   // 버퍼 직업 키워드(직업 텍스트 안에 포함되면 버퍼로 간주)
   const BUFFER_RE = /(뮤즈|크루세이더|인챈트리스|패러메딕)/;
 
-  // 카드에서 데이터 추출
+  // 강함지표 한 장의 DOM에서 라벨→값 매핑 만들기
+  // - '.tl'의 텍스트를 기준('2인','3인','4인','버프점수','랭킹' 등)
+  // - 숫자는 '.val'
+  const readStatMap = (el) => {
+    const map = {};
+    // 랭킹: ul.off 안에 존재
+    const rankVal = parseIntSafe($('.seh_stat ul.off li .val', el)?.textContent);
+    if (rankVal != null) map['랭킹'] = rankVal;
+
+    // stat_b 안의 li들 순회(2인/3인/4인 혹은 버프점수 등)
+    $$('.seh_stat .stat_b li', el).forEach(li => {
+      const label = $('.tl', li)?.textContent?.trim();
+      const val = parseIntSafe($('.val', li)?.textContent);
+      if (!label) return;
+      // 라벨 통일: 공백 제거 & 한글 라벨 신뢰
+      const key = label.replace(/\s+/g,'');
+      if (val != null) map[key] = val;
+    });
+    return map;
+  };
+
+  // 카드에서 데이터 추출 (강함지표 포함)  
   const readCard = (el) => {
     const job = $('.seh_job .sev', el)?.textContent?.trim() ?? '';
     const fame = parseIntSafe($('.seh_name .level .val', el)?.textContent) ?? -1;
     const name = $('.seh_name .name', el)?.textContent?.trim() ?? '';
     const role = BUFFER_RE.test(job) ? '버퍼' : '딜러';
-    return { el, job, fame, name, role };
+    const statMap = readStatMap(el);
+
+    // 우리가 사용할 키: 2인 / 버프점수 / 4인 / 랭킹
+    // - 던담 구조에 따라 '버프점수' 라벨이 없을 수도 있으므로 유사 라벨도 보정
+    const stat = {
+      two:   statMap['4인'] ?? null,
+      buff:  statMap['버프점수'] ?? statMap['버프'] ?? null,
+      four:  statMap['4인'] ?? null,
+      rank:  statMap['랭킹'] ?? null,
+    };
+
+    return { el, job, fame, name, role, stat };
   };
   const rows = cards.map(readCard);
 
@@ -93,7 +125,7 @@
     /* 카드 컴팩트 모드 */
     .scon.ddunin-compact { padding: 8px 10px !important; }
     .scon.ddunin-compact .seh_abata .imgt img { max-height: 72px; }
-    .scon.ddunin-compact .seh_addinfo, 
+    .scon.ddunin-compact .seh_addinfo,
     .scon.ddunin-compact .seh_stat { margin-top: 4px !important; }
   `;
   document.head.appendChild(style);
@@ -159,6 +191,9 @@
         <button class="btn2" data-sort="name:asc">이름A~Z</button>
         <button class="btn2" data-sort="name:desc">이름Z~A</button>
         <button class="btn2" data-sort="dom">원래순서</button>
+        <!-- 던담 강함지표 정렬 추가 -->
+        <button class="btn2" data-sort="dddam:asc">던담↑</button>
+        <button class="btn2" data-sort="dddam:desc">던담↓</button>
       </div>
     </div>
 
@@ -172,7 +207,7 @@
   document.body.appendChild(panel);
 
   // ==== STATE / PERSIST ======================================================
-  const SS_KEY = 'ddunin_filter_panel_state_v2_1'; // 버전 bump (프리셋 추가)
+  const SS_KEY = 'ddunin_filter_panel_state_v2_2'; // 버전 bump (던담 정렬 추가)
   const loadState = () => {
     try { return JSON.parse(sessionStorage.getItem(SS_KEY) || '{}'); } catch { return {}; }
   };
@@ -184,7 +219,7 @@
     job: '',
     role: '',
     fameExpr: '',
-    famePresets: [],            // ← 선택된 프리셋 키들의 배열 (['안개신','나벨',...])
+    famePresets: [],            // ← 선택된 프리셋 키들의 배열
     blocks: Object.keys(blockMap).reduce((m,k)=> (m[k]=true,m), {}),
     sort: 'dom'
   }, loadState());
@@ -241,18 +276,10 @@
   // exprObj와 프리셋을 합쳐 최종 조건 생성
   const mergeFameConstraints = (exprObj) => {
     const out = {min: exprObj.min, max: exprObj.max, ops: [...exprObj.ops]};
-
-    // ops 안의 >= 조건들을 min으로 흡수 (논리 AND)
-    const geVals = exprObj.ops.filter(o=>o.op==='<=' || o.op==='>=' || o.op==='>' || o.op==='<'); // 그대로 유지
-    // 다만 >= / > 는 min 쪽으로 해석할 수 있지만, 여기서는 원식 유지
-
-    // 프리셋 최소값
     const pmin = calcPresetMin();
     if (pmin != null) {
-      // 숫자 입력식의 min 과 프리셋의 min 중 더 큰 값을 사용 (더 빡센 조건)
       if (out.min == null || pmin > out.min) out.min = pmin;
-      // '>= pmin' 을 ops에도 넣어두면 가독성↑ (동작엔 영향 없음)
-      out.ops = out.ops.filter(o => !(o.op === '>=')); // 중복 정리 (가볍게)
+      out.ops = out.ops.filter(o => !(o.op === '>=')); // 중복 정리
       out.ops.push({op: '>=', val: pmin});
     }
     return out;
@@ -305,11 +332,57 @@
     const vis = rows.filter(r => r.el.style.display !== 'none');
     let ordered = vis.slice();
     const [key, dir] = (state.sort || 'dom').split(':');
-    if (key === 'dom') {
+
+    if (key === 'dddam') {
+      // 던담 강함지표 정렬: 버퍼 → 딜러 그룹 순
+      // 버퍼: 2인 > 버프점수, 딜러: 4인 > 랭킹
+      const scoreOf = (r) => {
+        if (r.role === '버퍼') {
+          return (r.stat.two ?? null) ?? (r.stat.buff ?? null) ?? 0;
+        }
+        // 딜러
+        return (r.stat.four ?? null) ?? (r.stat.rank ?? null) ?? 0;
+      };
+
+      ordered.sort((a, b) => {
+        // 그룹 우선: 버퍼 먼저
+        if (a.role !== b.role) return a.role === '버퍼' ? -1 : 1;
+
+        // 동점일 때 2차 키도 적용 (버퍼: 버프점수, 딜러: 랭킹)
+        const primaryA = scoreOf(a);
+        const primaryB = scoreOf(b);
+
+        if (primaryA !== primaryB) {
+          const diff = primaryA - primaryB;
+          return dir === 'desc' ? -diff : diff;
+        }
+
+        // 2차 기준
+        if (a.role === '버퍼') {
+          const secA = (a.stat.buff ?? -1);
+          const secB = (b.stat.buff ?? -1);
+          const diff2 = secA - secB;
+          if (diff2 !== 0) return dir === 'desc' ? -diff2 : diff2;
+        } else {
+          const secA = (a.stat.rank ?? -1);
+          const secB = (b.stat.rank ?? -1);
+          const diff2 = secA - secB;
+          if (diff2 !== 0) return dir === 'desc' ? -diff2 : diff2;
+        }
+
+        // 그래도 같으면 명성 내림차순으로 살짝 정렬(안정성)
+        const diff3 = (a.fame||0) - (b.fame||0);
+        return dir === 'desc' ? -diff3 : diff3;
+      });
+    }
+    else if (key === 'dom') {
+      // 기존 순서 유지
       ordered = originalOrder
         .filter(el => el.style.display !== 'none')
         .map(el => rows.find(r=>r.el===el));
-    } else {
+    }
+    else {
+      // 기존 명성/직업/이름 정렬
       const cmp = (a,b) => {
         let va, vb;
         if (key==='fame') { va=a.fame; vb=b.fame; }
@@ -325,6 +398,7 @@
       };
       ordered.sort(cmp);
     }
+
     for (const r of ordered) ROOT.appendChild(r.el);
   };
 
@@ -420,5 +494,5 @@
     if (e.key === 'Enter') { applyAll(); }
   });
 
-  console.log('%c[필터 보기] 패널이 활성화되었습니다. (역할 필터 & 컴팩트 모드 & 명성 프리셋)', 'color:#7dd3fc');
+  console.log('%c[필터 보기] 패널 활성화 (역할 필터·컴팩트·명성 프리셋·던담정렬)', 'color:#7dd3fc');
 })();
