@@ -149,8 +149,20 @@
           <button class="btn copy" data-for="bm-filter">📋 복사</button>
         </div>
       </article>
-    </section>
 
+    
+      <article class="card">
+        <h2>④ 던담 <b>8칸 그리드</b></h2>
+        <p>던담 검색결과 한 줄에 8개씩 보기</p>
+        <div class="actions">
+          <a class="bm" id="bm-8col" href="javascript:(function(){var ID='dd-8col-style';var s=document.getElementById(ID);if(!s){s=document.createElement('style');s.id=ID;s.appendChild(document.createTextNode('#search_result .container,#search_result .sr-result{max-width:2000px!important;width:2000px!important;margin:0 auto!important}#search_result .sr-result{display:grid!important;grid-template-columns:repeat(8,1fr)!important;gap:12px!important}#search_result .sr-result>.scon{width:auto!important;margin:0!important}'));document.head.appendChild(s);alert('8칸 고정 ON');}else{s.remove();alert('스타일 OFF');}})();">
+            <span class="emoji">🖼️</span>8칸 그리드
+          </a>
+          <button class="btn copy" data-for="bm-8col">📋 복사</button>
+        </div>
+      </article>
+    </section>
+    
     <footer>
       <p>⚠️ 일부 사이트는 <b>CSP</b>(콘텐츠 보안 정책)으로 외부 스크립트/Blob을 차단할 수 있어요. 그 경우 <b>Tampermonkey</b> 스크립트로 설치하는 방법을 고려하세요.</p>
     </footer>
@@ -188,3 +200,4 @@
   </script>
 </body>
 </html>
+
