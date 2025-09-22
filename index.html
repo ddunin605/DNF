@@ -127,7 +127,7 @@
         <div class="actions">
           <a class="bm" id="bm-main"
              href="javascript:(async()=>{const MUST='dundam.xyz';if(!location.hostname.endsWith(MUST)){if(confirm('던담으로 이동할까요?'))location.href='https://dundam.xyz/';return;}const u='https://raw.githubusercontent.com/ddunin605/DNF/b5f832b979f61f3b02818655ec2305c302821eed/250922%20%EB%8D%98%EB%8B%B4%EA%B8%B0%EB%8A%A5.js';const q=u+(u.includes('?')?'&':'?')+'t='+Date.now();try{const r=await fetch(q);if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert('❌ 로딩 실패(Blob): CSP가 blob:을 막음');document.body.appendChild(s);}catch(e){const s=document.createElement('script');s.src=q;s.onerror=()=>alert('❌ 불러오기 실패: '+e.message+' (사이트 CSP 가능)');document.body.appendChild(s);}})();">
-            <span class="emoji">🚀</span>던담-기능(250922)
+            <span class="emoji">🚀</span>던담-기능
           </a>
           <button class="btn copy" data-for="bm-main">📋 복사</button>
         </div>
@@ -223,6 +223,7 @@
   </script>
 </body>
 </html>
+
 
 
 
