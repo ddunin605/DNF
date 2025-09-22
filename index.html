@@ -119,8 +119,21 @@
           <button class="btn copy" data-for="bm-scrollgutter">📋 복사</button>
         </div>
       </article>
+      
+      <!-- ① 던담 기능(250922) -->
+      <article class="card">
+        <h2>① 던담 <b>기능(250922)</b></h2>
+        <p>dundam.xyz 모험단 화면에서 실행</p>
+        <div class="actions">
+          <a class="bm" id="bm-main"
+             href="javascript:(async()=>{const MUST='dundam.xyz';if(!location.hostname.endsWith(MUST)){if(confirm('던담으로 이동할까요?'))location.href='https://dundam.xyz/';return;}const u='https://raw.githubusercontent.com/ddunin605/DNF/b5f832b979f61f3b02818655ec2305c302821eed/250922%20%EB%8D%98%EB%8B%B4%EA%B8%B0%EB%8A%A5.js';const q=u+(u.includes('?')?'&':'?')+'t='+Date.now();try{const r=await fetch(q);if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=()=>alert('❌ 로딩 실패(Blob): CSP가 blob:을 막음');document.body.appendChild(s);}catch(e){const s=document.createElement('script');s.src=q;s.onerror=()=>alert('❌ 불러오기 실패: '+e.message+' (사이트 CSP 가능)');document.body.appendChild(s);}})();">
+            <span class="emoji">🚀</span>던담-기능(250922)
+          </a>
+          <button class="btn copy" data-for="bm-main">📋 복사</button>
+        </div>
+      </article>
 
-      <!-- ① 중천 주간던파 -->
+      <!-- ② 중천 주간던파 -->
       <article class="card">
         <h2>① 공홈 · <b>중천 v3 실행</b></h2>
         <p>공홈 주간던파에서 사용</p>
@@ -130,7 +143,7 @@
         </div>
       </article>
 
-      <!-- ② 던담 모험단 서치 -->
+      <!-- ③ 던담 모험단 서치 -->
       <article class="card">
         <h2>② 던담 <b>모험단 서치</b></h2>
         <p>캐릭터 리스트 나열</p>
@@ -140,7 +153,7 @@
         </div>
       </article>
 
-      <!-- ③ 던담 필터 보기 -->
+      <!-- ④ 던담 필터 보기 -->
       <article class="card">
         <h2>③ 던담 <b>필터 패널</b></h2>
         <p>던담 모험단에서 사용</p>
@@ -152,7 +165,7 @@
 
     
       <article class="card">
-        <h2>④ 던담 <b>8칸 그리드</b></h2>
+        <h2>⑤ 던담 <b>8칸 그리드</b></h2>
         <p>던담 모험단 가로로 많이..</p>
         <div class="actions">
           <a class="bm" id="bm-8col" href="javascript:(function(){var ID='dd-8col-style';var s=document.getElementById(ID);if(!s){s=document.createElement('style');s.id=ID;s.appendChild(document.createTextNode('#search_result .container,#search_result .sr-result{max-width:2000px!important;width:2000px!important;margin:0 auto!important}#search_result .sr-result{display:grid!important;grid-template-columns:repeat(8,1fr)!important;gap:12px!important}#search_result .sr-result>.scon{width:auto!important;margin:0!important}'));document.head.appendChild(s);alert('8칸 고정 ON');}else{s.remove();alert('스타일 OFF');}})();">
@@ -163,7 +176,7 @@
       </article>
       
       <article class="card">
-      <h2>⑤ 던담 <b>이내전용</b></h2>
+      <h2>⑥ 던담 <b>이내전용</b></h2>
       <p>이내전용 던담 기능 실행</p>
       <div class="actions">
         <a class="bm" id="bm-inae" href="javascript:(async()=>{const u='https://raw.githubusercontent.com/ddunin605/DNF/0af4055395facf5e4791294e06d0d54bf5f079f9/250826%20%EC%9D%B4%EB%82%B4%EC%A0%84%EC%9A%A9%EB%8D%98%EB%8B%B4.js';try{const r=await fetch(u+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);document.body.appendChild(s);}catch(e){alert('❌ 불러오기 실패: '+e.message);}})();">
@@ -210,6 +223,7 @@
   </script>
 </body>
 </html>
+
 
 
 
