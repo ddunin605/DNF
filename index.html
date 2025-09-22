@@ -120,7 +120,7 @@
         </div>
       </article>
       
-      <!-- ① 던담 기능(250922) -->
+      <!-- ① 던담 기능 -->
       <article class="card">
         <h2>① 던담 <b>기능</b></h2>
         <p>dundam.xyz 모험단 화면에서 실행</p>
@@ -135,7 +135,7 @@
 
       <!-- ② 중천 주간던파 -->
       <article class="card">
-        <h2>① 공홈 · <b>중천 v3 실행</b></h2>
+        <h2>① 공홈 · <b>중천 v3</b></h2>
         <p>공홈 주간던파에서 사용</p>
         <div class="actions">
           <a class="bm" id="bm-weekly" href="javascript:(()=>{const TARGET='https://df.nexon.com/mypage/character/weekly';if(!/\b(dnf|df)\.nexon\.com$/.test(location.hostname)){location.href=TARGET;return;}const U1='https://cdn.jsdelivr.net/gh/ddunin605/DNF-week-v3/%EB%96%A0%EB%8B%9D%EC%9D%98%20%EC%A3%BC%EA%B0%84%EB%8D%98%ED%8C%8C%20v3.js';const U2='https://raw.githubusercontent.com/ddunin605/DNF-week-v3/main/%EB%96%A0%EB%8B%9D%EC%9D%98%20%EC%A3%BC%EA%B0%84%EB%8D%98%ED%8C%8C%20v3.js';const Q=u=>u+(u.includes('?')?'&':'?')+'t='+Date.now();const E=m=>alert('❌ '+m+' (사이트 CSP가 막을 수 있어요)');const add=(u,fail)=>{const s=document.createElement('script');s.src=Q(u);s.onerror=fail;document.body.appendChild(s)};const fetchBlob=(u,fail)=>fetch(Q(u)).then(r=>{if(!r.ok)throw 0;return r.text()}).then(t=>{const b=new Blob([t],{type:'text/javascript'});const url=URL.createObjectURL(b);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);s.onerror=fail;document.body.appendChild(s)}).catch(fail);const fail4=()=>E('모든 방식 차단: 북마클릿 불가 · Tampermonkey 권장');const fail3=()=>fetchBlob(U2,fail4);const fail2=()=>fetchBlob(U1,fail3);const fail1=()=>add(U2,fail2);add(U1,fail1)})();"><span class="emoji">✨</span>공홈-주간던파</a>
@@ -223,6 +223,7 @@
   </script>
 </body>
 </html>
+
 
 
 
