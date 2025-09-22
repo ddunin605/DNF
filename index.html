@@ -161,6 +161,16 @@
           <button class="btn copy" data-for="bm-8col">📋 복사</button>
         </div>
       </article>
+      
+      <article class="card">
+      <h2>⑤ 던담 <b>이내전용</b></h2>
+      <p>이내전용 던담 기능 실행</p>
+      <div class="actions">
+        <a class="bm" id="bm-inae" href="javascript:(async()=>{const u='https://raw.githubusercontent.com/ddunin605/DNF/0af4055395facf5e4791294e06d0d54bf5f079f9/250826%20%EC%9D%B4%EB%82%B4%EC%A0%84%EC%9A%A9%EB%8D%98%EB%8B%B4.js';try{const r=await fetch(u+'?t='+Date.now());if(!r.ok)throw new Error('HTTP '+r.status);const code=await r.text();const blob=new Blob([code],{type:'text/javascript'});const url=URL.createObjectURL(blob);const s=document.createElement('script');s.src=url;s.onload=()=>URL.revokeObjectURL(url);document.body.appendChild(s);}catch(e){alert('❌ 불러오기 실패: '+e.message);}})();">
+          <span class="emoji">🌟</span>이내전용 던담
+        </a>
+        <button class="btn copy" data-for="bm-inae">📋 복사</button>
+      </div>
     </section>
     
     <footer>
@@ -200,5 +210,6 @@
   </script>
 </body>
 </html>
+
 
 
